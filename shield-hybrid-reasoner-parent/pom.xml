@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+  
+  <groupId>gov.hhs.fda.shield</groupId>
+  <artifactId>shield-hybrid-reasoner-parent</artifactId>
+  <version>0.4.3</version>
+  <packaging>pom</packaging>
+  
+  	<organization>
+		<name>FDA</name>
+	</organization>
+	<modules>
+<!--		<module>shield-absent-reasoner-protege-plugin</module>  -->
+		<module>shield-hybrid-reasoner</module>
+		<module>shield-hybrid-reasoner-protege-plugin</module>
+</modules>
+
+
+
+	<properties>
+
+		<owlapi.version>4.1.3</owlapi.version>
+		<protege.version>5.5.0</protege.version>
+		<elk.version>0.4.3</elk.version>
+
+		<java.version>11</java.version>
+		<maven.compiler.source>${java.version}</maven.compiler.source>
+		<maven.compiler.target>${java.version}</maven.compiler.target>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+
+</project>

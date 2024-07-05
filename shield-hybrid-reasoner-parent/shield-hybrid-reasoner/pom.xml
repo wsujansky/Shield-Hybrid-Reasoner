@@ -1,0 +1,100 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>gov.hhs.fda.shield</groupId>
+		<artifactId>shield-hybrid-reasoner-parent</artifactId>
+		<version>0.4.3</version>
+	</parent>
+
+
+
+  <artifactId>shield-hybrid-reasoner</artifactId>
+  <packaging>jar</packaging>
+
+  <build>
+    <sourceDirectory>src</sourceDirectory>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.8.1</version>
+        <configuration>
+          <release>11</release>
+        </configuration>
+
+      </plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			
+    </plugins>
+  </build>
+  
+
+
+	<dependencies>
+<!--
+			<dependency>
+			<groupId>net.sourceforge.owlapi</groupId>
+			<artifactId>owlapi-osgidistribution</artifactId>
+			<version>4.5.26</version>
+		</dependency>
+-->
+		<dependency>
+			<groupId>net.sourceforge.owlapi</groupId>
+			<artifactId>owlapi-api</artifactId>
+			<version>${owlapi.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.sourceforge.owlapi</groupId>
+			<artifactId>owlapi-impl</artifactId>
+			<version>${owlapi.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.sourceforge.owlapi</groupId>
+			<artifactId>owlapi-apibinding</artifactId>
+			<version>${owlapi.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+
+		<dependency>
+			<groupId>org.semanticweb.elk</groupId>
+			<artifactId>elk-owlapi</artifactId>
+            <version>0.4.3-LOCAL</version>
+		</dependency>
+		<dependency>
+			<groupId>org.semanticweb.elk</groupId>
+			<artifactId>elk-reasoner</artifactId>
+            <version>0.4.3-LOCAL</version>
+		</dependency>
+<!-- -->		
+		<dependency>
+			<groupId>gov.hhs.fda.shield</groupId>
+			<artifactId>temporal-subsumption-tester</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+<!-- -->
+
+<dependency>
+    <groupId>org.slf4j</groupId>
+    <artifactId>slf4j-nop</artifactId>
+    <version>1.7.12</version>
+    <scope>test</scope>
+</dependency>
+		
+	</dependencies>
+
+</project>

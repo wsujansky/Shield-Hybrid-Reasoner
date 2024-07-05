@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+
+    <extension id="shieldabsent.reasoner.factory" point="org.protege.editor.owl.inference_reasonerfactory">
+        <name value="SHIELD Absent (Hybrid) 0.4.3"/>
+        <label value="SHIELD Absent (Hybrid) 0.4.3"/>
+        <class value="gov.hhs.fda.shield.protege.ShieldAbsentProtegeReasonerFactory"/> 
+<!--        <class value="org.semanticweb.elk.protege.ProtegeReasonerFactory"/> -->
+    </extension>
+
+    <extension id="shieldabsent.init" point="org.protege.editor.core.application.EditorKitHook">
+        <class value="gov.hhs.fda.shield.protege.ShieldAbsentProtegePluginInstance"/>
+        <editorKitId value="OWLEditorKit"/>
+    </extension>
+
+</plugin>

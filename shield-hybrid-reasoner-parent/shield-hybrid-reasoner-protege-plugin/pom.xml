@@ -1,0 +1,276 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  
+  <parent>
+    <groupId>gov.hhs.fda.shield</groupId>
+    <artifactId>shield-hybrid-reasoner-parent</artifactId>
+    <version>0.4.3</version>
+  </parent>
+  
+  <artifactId>shield-hybrid-reasoner-protege-plugin</artifactId>
+  <packaging>jar</packaging>
+
+
+	<properties>
+
+		<owlapi.version>4.1.3</owlapi.version>
+<!--		<protege.version>5.5.0</protege.version>   THIS WORKED FOR SURE -->
+		<protege.version>5.6.4</protege.version> 
+		<elk.version>0.4.3</elk.version>
+
+		<java.version>11</java.version>
+		<maven.compiler.source>${java.version}</maven.compiler.source>
+		<maven.compiler.target>${java.version}</maven.compiler.target>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+
+    <dependencies>
+
+<!--
+		<dependency>
+			<groupId>net.sourceforge.owlapi</groupId>
+			<artifactId>owlapi-api</artifactId>
+			<version>4.1.3</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.sourceforge.owlapi</groupId>
+			<artifactId>owlapi-impl</artifactId>
+			<version>4.1.3</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.semanticweb.elk</groupId>
+			<artifactId>elk-owlapi</artifactId>
+            <version>0.4.3</version>
+		</dependency>
+
+        <dependency>
+            <groupId>org.semanticweb.elk</groupId>
+            <artifactId>elk-reasoner</artifactId>
+            <version>0.4.3</version>
+        </dependency>
+
+-->
+
+       <dependency>
+            <groupId>gov.hhs.fda.shield</groupId>
+            <artifactId>shield-hybrid-reasoner</artifactId>
+            <version>0.4.3</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.semanticweb.elk</groupId>
+            <artifactId>elk-reasoner</artifactId>
+            <version>0.4.3-LOCAL</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+
+  
+<!-- ADDITIONAL DEPENDENCIES TO TRY TO SOLVE OSGI BUNDLE EXCEPTION ERRORS 
+<dependency>
+    <groupId>com.google.appengine</groupId>
+    <artifactId>appengine-api-1.0-sdk</artifactId>
+    <version>2.0.4</version> 
+  </dependency>
+  <dependency>
+    <groupId>com.google.api</groupId>
+    <artifactId>api-common</artifactId>
+    <version>2.31.0</version>
+</dependency>
+<dependency>
+    <groupId>net.morimekta.utils</groupId>
+    <artifactId>android-util</artifactId>
+    <version>3.0.1</version>
+</dependency>
+<dependency>
+    <groupId>com.google.api</groupId>
+    <artifactId>gax</artifactId>
+    <version>2.48.0</version>
+</dependency>
+<dependency>
+    <groupId>com.google.api</groupId>
+    <artifactId>gax-grpc</artifactId>
+    <version>2.48.0</version>
+</dependency>
+<dependency>
+    <groupId>com.google.api</groupId>
+    <artifactId>toolkit</artifactId>
+    <version>0.0.5</version>
+</dependency>
+<dependency>
+    <groupId>com.google.api</groupId>
+    <artifactId>api-compiler</artifactId>
+    <version>0.0.8</version>
+</dependency>
+<dependency>
+    <groupId>com.aayushatharva.brotli4j</groupId>
+    <artifactId>brotli4j</artifactId>
+    <version>1.16.0</version>
+</dependency>
+<dependency>
+    <groupId>com.github.luben</groupId>
+    <artifactId>zstd-jni</artifactId>
+    <version>1.5.6-3</version>
+</dependency>
+
+<dependency>
+    <groupId>com.google.api-client</groupId>
+    <artifactId>google-api-client</artifactId>
+    <version>2.5.0</version>
+</dependency>
+
+
+
+
+-->
+
+<!--
+<dependency>
+    <groupId>com.google.auto.value</groupId>
+    <artifactId>auto-value-annotations</artifactId>
+    <version>1.10.4</version>
+</dependency>
+
+<dependency>
+    <groupId>com.google.auto.value</groupId>
+    <artifactId>auto-value</artifactId>
+    <version>1.10.4</version>
+</dependency>
+-->
+
+
+
+     
+        <dependency>
+            <groupId>org.semanticweb.elk</groupId>
+            <artifactId>elk-protege</artifactId>
+            <version>0.4.3</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+<!--
+	                <exclusion>
+                	<groupId>org.semanticweb.elk</groupId>
+                	<artifactId>elk-reasoner-HYBRID-FORK</artifactId>
+                </exclusion>  
+-->
+	                <exclusion>
+                	<groupId>org.semanticweb.elk</groupId>
+                	<artifactId>elk-reasoner</artifactId>
+                </exclusion>  
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>edu.stanford.protege</groupId>
+            <artifactId>protege-editor-owl</artifactId>
+<!--            <version>5.5.0</version>  -->
+            <version>${protege.version}</version>
+            <scope>provided</scope>            
+            <exclusions>
+<!--
+                <exclusion>
+                    <groupId>ch.qos.logback</groupId>
+                    <artifactId>logback-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>ch.qos.logback</groupId>
+                    <artifactId>logback-classic</artifactId>
+                </exclusion>
+-->
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-databind</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-codec</groupId>
+                    <artifactId>commons-codec</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-io</groupId>
+                    <artifactId>commons-io</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.httpcomponents</groupId>
+                    <artifactId>httpclient</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.codehaus.plexus</groupId>
+                    <artifactId>plexus-utils</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jgit</groupId>
+                    <artifactId>org.eclipse.jgit</artifactId>
+                </exclusion>
+            </exclusions>           
+        </dependency>
+    </dependencies>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>${basedir}/src/main/resources</directory>
+                <includes>
+                    <include>plugin.xml</include>
+                </includes>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>5.1.9</version>
+                <extensions>true</extensions>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>bundle</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+<!--                    <finalName>SNOMED Absent Reasoner</finalName>-->
+                    <instructions>
+                        <Implementation-Title>Shield Absent Reasoner</Implementation-Title>
+                        <Implementation-Vendor>${project.organization.name}</Implementation-Vendor>
+                        <Implementation-Version>${project.version}.${maven.build.timestamp}</Implementation-Version>
+                        <Import-Package>*</Import-Package>
+                        <Export-Package>!*</Export-Package>  
+                        <Bundle-SymbolicName>${project.groupId};singleton:=true</Bundle-SymbolicName>
+                        <Bundle-Activator>org.protege.editor.core.plugin.DefaultPluginActivator</Bundle-Activator>
+                        <Bundle-Version>${project.version}</Bundle-Version>
+                        <Embed-Dependency>*;scope=!provided;scope=compile|runtime;inline=false</Embed-Dependency> 
+                        <Embed-Transitive>true</Embed-Transitive>
+                        <Embed-Directory>target/dependency</Embed-Directory>
+                        <Embed-StripGroup>true</Embed-StripGroup>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
