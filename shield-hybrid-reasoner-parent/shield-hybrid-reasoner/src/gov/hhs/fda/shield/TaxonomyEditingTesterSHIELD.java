@@ -1,41 +1,23 @@
 package gov.hhs.fda.shield;
 
-	import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.lang.reflect.Array;
+
 import java.text.Collator;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
 
-import org.semanticweb.elk.owl.exceptions.ElkException;
-import org.semanticweb.elk.owl.implementation.ElkClassImpl;
 import org.semanticweb.elk.owl.interfaces.ElkClass;
-import org.semanticweb.elk.owl.iris.ElkFullIri;
-import org.semanticweb.elk.owl.iris.ElkIri;
-import org.semanticweb.elk.owl.iris.ElkPrefix;
 import org.semanticweb.elk.owlapi.ElkConverter;
-import org.semanticweb.elk.owlapi.ElkReasoner;
 import org.semanticweb.elk.owlapi.wrapper.ElkClassWrap;
-import org.semanticweb.elk.reasoner.ElkInconsistentOntologyException;
-import org.semanticweb.elk.reasoner.Reasoner;
 import org.semanticweb.elk.reasoner.taxonomy.ConcurrentClassTaxonomy;
 import org.semanticweb.elk.reasoner.taxonomy.NonBottomClassNode;
 import org.semanticweb.elk.reasoner.taxonomy.model.UpdateableBottomNode;
-import org.semanticweb.elk.reasoner.taxonomy.model.Taxonomy;
 import org.semanticweb.elk.reasoner.taxonomy.model.TaxonomyNode;
-import org.semanticweb.elk.reasoner.taxonomy.model.UpdateableTaxonomy;
 import org.semanticweb.elk.reasoner.taxonomy.model.UpdateableTaxonomyNode;
 import org.semanticweb.owlapi.model.OWLClass;
-import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.reasoner.Node;
 import org.semanticweb.owlapi.reasoner.NodeSet;
-import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import org.semanticweb.owlapi.reasoner.structural.StructuralReasoner;
 
 
@@ -45,13 +27,15 @@ import org.semanticweb.owlapi.reasoner.structural.StructuralReasoner;
 			// TODO Auto-generated constructor stub
 		}
 		
+
 		public static void addSubClassNode (Node<OWLClass> node) {
 			//no op for now
 
 			Set<OWLClass> entities = node.getEntities();
-			for (Iterator iterator = entities.iterator(); iterator.hasNext();) {
+			for (Iterator<OWLClass> iterator = entities.iterator(); iterator.hasNext();) {
 				OWLClass owlClass = (OWLClass) iterator.next();
-			ElkClassWrap<OWLClass> ek = new ElkClassWrap<OWLClass>(owlClass);
+				@SuppressWarnings("unused")
+				ElkClassWrap<OWLClass> ek = new ElkClassWrap<OWLClass>(owlClass);
 			}
 		}
 		
@@ -66,7 +50,7 @@ import org.semanticweb.owlapi.reasoner.structural.StructuralReasoner;
 				System.out.println(indentSpaces(level) + getShortFormElkClassName(elkClass));
 				Set<UpdateableTaxonomyNode<ElkClass>> subNodes = ((NonBottomClassNode) node).getDirectUpdateableSubNodes(); 
 				LinkedList<UpdateableTaxonomyNode<ElkClass>> sortedSubNodes = sortNodes(subNodes);
-				for (Iterator iterator = sortedSubNodes.iterator(); iterator.hasNext();) {
+				for (Iterator<UpdateableTaxonomyNode<ElkClass>> iterator = sortedSubNodes.iterator(); iterator.hasNext();) {
 					TaxonomyNode<ElkClass> elkSubNode = (TaxonomyNode<ElkClass>) iterator.next();
 					printTaxonomy(elkSubNode, level+1, alreadyDone, taxonomy, makeChange);  
 					}
@@ -84,7 +68,7 @@ import org.semanticweb.owlapi.reasoner.structural.StructuralReasoner;
 				// Now recurse
 				OWLClass thisClass = node.getEntities().iterator().next();
 				NodeSet<OWLClass> subNodes = reasoner.getSubClasses(thisClass, true);  
-				for (Iterator iterator = subNodes.iterator(); iterator.hasNext();) {
+				for (Iterator<Node<OWLClass>> iterator = subNodes.iterator(); iterator.hasNext();) {
 					Node<OWLClass> owlSubNode = (Node<OWLClass>) iterator.next();
 					printTaxonomy(owlSubNode, level+1, alreadyDone, reasoner, makeChange);  
 					}

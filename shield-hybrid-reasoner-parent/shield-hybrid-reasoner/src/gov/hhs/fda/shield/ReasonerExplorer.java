@@ -329,7 +329,6 @@ public static void tempTestReferencingAxiomsPrinter(OWLOntology owlOntology, OWL
 	Taxonomy<ElkClass> taxonomy = internalReasoner.getTaxonomy();
 	TaxonomyNode<ElkClass> topNode = taxonomy.getTopNode();
 	TaxonomyEditingTesterSHIELD tester = new TaxonomyEditingTesterSHIELD();		
-//	ElkClass currentNodeClass = topNode.getMembers().iterator().next();
 	tester.printTaxonomy(topNode, 0, true, (ConcurrentClassTaxonomy) taxonomy, false);
 	} catch (ElkInconsistentOntologyException e) {
 		// TODO Auto-generated catch block

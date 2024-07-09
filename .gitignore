@@ -1,0 +1,30 @@
+bin/
+tmp/
+
+### Java ###
+# Compiled class file
+*.class
+
+# Log file
+*.log
+
+
+# Package Files #
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+
+### Maven ###
+target/
+
+
+# Dump file
+*.stackdump
+
+
+# End of https://www.gitignore.io/api/git,java,maven,eclipse,windows

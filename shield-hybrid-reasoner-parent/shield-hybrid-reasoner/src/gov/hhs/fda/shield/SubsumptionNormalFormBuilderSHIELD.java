@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
@@ -29,34 +28,21 @@ import org.semanticweb.owlapi.model.OWLProperty;
 import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
 import org.semanticweb.owlapi.model.OWLSubPropertyChainOfAxiom;
 import org.semanticweb.owlapi.model.OWLTransitiveObjectPropertyAxiom;
-import org.semanticweb.owlapi.reasoner.Node;
-import org.semanticweb.owlapi.reasoner.NodeSet;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
-import org.semanticweb.owlapi.reasoner.impl.OWLClassNode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 
 public class SubsumptionNormalFormBuilderSHIELD {
-
-	private static final Logger LOG = LoggerFactory.getLogger(SubsumptionNormalFormBuilderSHIELD.class);
 
 	private OWLOntology statementOntology;
 	private OWLOntology kernelOntology;
 	private OWLReasoner statementOwlReasoner;
 	private OWLReasoner kernelOwlReasoner;
-
 	private CustomSubsumptionTesterSHIELD subsumptionTester;
-
 	private List<OWLClass> concepts = new ArrayList<>();
 	private HashMap<OWLObjectProperty, OWLObjectProperty> chained = new HashMap<>();
 	private HashSet<OWLObjectProperty> transitive = new HashSet<>();
 	private HashMap<OWLObjectProperty, Set<OWLObjectProperty>> superProps = new HashMap<>();
 	private HashMap<OWLClass, List<SubsumptionNormalFormSHIELD>> unmergedSubsumptionNormalFormsSHIELD = new HashMap<>();
 	private HashMap<OWLClass, SubsumptionNormalFormSHIELD> subsumptionNormalFormsSHIELD = new HashMap<>();
-
-	private int scoe_cnt = 0;
-	private int scoe_chained_cnt = 0;
 
 	public List<OWLClass> getConcepts() {
 		return concepts;
@@ -88,7 +74,8 @@ public class SubsumptionNormalFormBuilderSHIELD {
 	
 
 	
-// This method is for debugging only
+// This method was for debugging only
+/*****
 	public void testSubsumptionsPairwise() {
 		        for (Map.Entry<OWLClass, SubsumptionNormalFormSHIELD> entry : subsumptionNormalFormsSHIELD.entrySet()) {
 		            OWLClass key = entry.getKey();
@@ -123,7 +110,7 @@ public class SubsumptionNormalFormBuilderSHIELD {
 			}
 		}
 	}
-
+***/
 
 	public void init() {
 		initConcepts();
@@ -160,19 +147,17 @@ public class SubsumptionNormalFormBuilderSHIELD {
 // DEBUG		System.out.println("STATEMENT REASONER TAXONOMY - IN SNF BUILDER");
 // DEBUG		ReasonerExplorer.printCurrentReasonerTaxonomy((StructuralReasoner) statementOwlReasoner, false);
 		for (OWLClass concept : statementOntology.getClassesInSignature()) {
-			String id = concept.getIRI().toString();
-			NodeSet<OWLClass> supers = statementOwlReasoner.getSuperClasses(concept, false);
-			for (Iterator iterator = supers.iterator(); iterator.hasNext();) {
-				OWLClassNode owlClassNode = (OWLClassNode) iterator.next();
-			}
+//			NodeSet<OWLClass> supers = statementOwlReasoner.getSuperClasses(concept, false);
+//			for (Iterator<Node<OWLClass>> iterator = supers.iterator(); iterator.hasNext();) {
+//				OWLClassNode owlClassNode = (OWLClassNode) iterator.next();
+//			}
 			concepts.add(concept);
 		}
-// LOG		LOG.info("Concepts: " + concepts.size());
 	}
 
+	@SuppressWarnings("unused")
 	private void initRoles() {
 		for (OWLSubPropertyChainOfAxiom ax : kernelOntology.getAxioms(AxiomType.SUB_PROPERTY_CHAIN_OF)) {
-// LOG			LOG.info("Chain: " + ax);
 			if (ax.getPropertyChain().size() != 2) {
 				throw new UnsupportedOperationException("Unexpected: " + ax);
 			}
@@ -189,7 +174,6 @@ public class SubsumptionNormalFormBuilderSHIELD {
 			chained.put(prop1, prop2);
 		}
 		for (Entry<OWLObjectProperty, OWLObjectProperty> es : chained.entrySet()) {
-// LOG			LOG.info("Chained: " + es.getKey() + " " + es.getValue());
 		}
 		for (OWLTransitiveObjectPropertyAxiom ax : kernelOntology
 				.getAxioms(AxiomType.TRANSITIVE_OBJECT_PROPERTY)) {
@@ -199,11 +183,11 @@ public class SubsumptionNormalFormBuilderSHIELD {
 		for (OWLObjectProperty prop : transitive) {
 // LOG			LOG.info("Transitive: " + prop);
 		}
-		for (Iterator iterator = concepts.iterator(); iterator.hasNext();) {
+		for (Iterator<OWLClass> iterator = concepts.iterator(); iterator.hasNext();) {
 			OWLClass owlClass = (OWLClass) iterator.next();
 		}
 		Set<OWLObjectProperty> allObjectProperties = kernelOntology.getObjectPropertiesInSignature();
-		for (Iterator iterator = allObjectProperties.iterator(); iterator.hasNext();) {
+		for (Iterator<OWLObjectProperty> iterator = allObjectProperties.iterator(); iterator.hasNext();) {
 			OWLObjectProperty prop = (OWLObjectProperty) iterator.next();
 //		for (OWLObjectProperty prop : kernelOntology.getObjectPropertiesInSignature()) {
 			superProps.put(prop, new HashSet<>());
@@ -235,34 +219,24 @@ public class SubsumptionNormalFormBuilderSHIELD {
 		}
 	}
 	
-
-
-	@SuppressWarnings("deprecation")
 	public void generate() {   // was public void generate(Roles roles)
-// ??		Reasoner.processingSubsumptionNormalFormSHIELD = true;
-		int cnt = 0;
+// Needed??		Reasoner.processingSubsumptionNormalFormSHIELD = true;
 		for (OWLClass concept : concepts) {
-			if (++cnt % 50000 == 0) {
-// LOG				LOG.info("Generate: " + cnt);
-			}
 			for (OWLClassAxiom axiom : getLogicalAxioms(concept, statementOntology)) {
 				unmergedSubsumptionNormalFormsSHIELD.put(concept, new ArrayList<>());
-// LOG				LOG.info(concept + " " + axiom);
 				SubsumptionNormalFormSHIELD expr = createExpression(concept, axiom);
 				unmergedSubsumptionNormalFormsSHIELD.get(concept).add(expr);
-// DEBUG				System.out.println("Initial SNF for " + concept + " is :");
-// DEBUG				System.out.println(" " + expr.toString());
+// DEBUG System.out.println("Initial SNF for " + concept + " is :");
+// DEBUG System.out.println(" " + expr.toString());
 				simplify(expr.getUngroupedProps());
 			}
 			if (!getLogicalAxioms(concept, statementOntology).isEmpty()) {
 				subsumptionNormalFormsSHIELD.put(concept, mergeNNFs(unmergedSubsumptionNormalFormsSHIELD.get(concept)));
-// DEBUG				System.out.println("Simplified/Merged SNF for " + concept + " is :");
-// DEBUG				System.out.println(" " + subsumptionNormalFormSHIELD.get(concept));
+// DEBUG System.out.println("Simplified/Merged SNF for " + concept + " is :");
+// DEBUG System.out.println(" " + subsumptionNormalFormSHIELD.get(concept));
 			}
 		}
-// LOG		LOG.info("Generate: " + cnt);
-// ??	Reasoner.processingSubsumptionNormalFormSHIELD = false;
-// LOG		LOG.info("SCOE: " + scoe_cnt);
+// Needed??	Reasoner.processingSubsumptionNormalFormSHIELD = false;
 	}
 
 	
@@ -296,6 +270,7 @@ public class SubsumptionNormalFormBuilderSHIELD {
 				if (class_exprs.size() != 2)
 					throw new UnsupportedOperationException("Unexpected: " + class_exprs.size() + " " + class_exprs);
 				Iterator<OWLClassExpression> iterator = class_exprs.iterator();
+				@SuppressWarnings("unused")  // Only included to get to 2nd item
 				OWLClassExpression clazz = iterator.next();
 				OWLClassExpression def = iterator.next();
 				return def;
@@ -329,7 +304,7 @@ public class SubsumptionNormalFormBuilderSHIELD {
 		return expr;
 	}
 
-
+	@SuppressWarnings("deprecation")
 	private Set<OWLObjectSomeValuesFrom> processDefinitionProperties(OWLClass concept, OWLClassAxiom axiom) {
 		Set<OWLObjectSomeValuesFrom> properties = new HashSet<>();
 		OWLClassExpression classDefinition = getDefinition(concept, axiom);
@@ -365,10 +340,10 @@ public class SubsumptionNormalFormBuilderSHIELD {
 	}
 
 
+	@SuppressWarnings("deprecation")
 	private Set<OWLObjectSomeValuesFrom> processIntersectionProperties(Set<OWLClassExpression> class_exprs, OWLClassAxiom axiom) {
 		Set<OWLObjectSomeValuesFrom> properties = new HashSet<>();
-		int counter = 0;
-		for (Iterator iterator = class_exprs.iterator(); iterator.hasNext();) {
+		for (Iterator<OWLClassExpression> iterator = class_exprs.iterator(); iterator.hasNext();) {
 			OWLClassExpression class_expr = (OWLClassExpression) iterator.next();
 //			switch (class_expr) {
 //				case OWLClass z -> {
@@ -391,7 +366,7 @@ public class SubsumptionNormalFormBuilderSHIELD {
 		return properties;
 	}
 
-	
+	@SuppressWarnings("deprecation")
 	private Set<OWLClass> processDefinitionFocusConcepts(OWLClass concept, OWLClassAxiom axiom) {
 		Set<OWLClass> focusConcepts = new HashSet<>();
 		OWLClassExpression classDefinition = getDefinition(concept, axiom);
@@ -436,7 +411,7 @@ public class SubsumptionNormalFormBuilderSHIELD {
 		return focusConcepts;
 	}
 
-
+	@SuppressWarnings("deprecation")
 	private Set<OWLClass> processIntersectionFocusConcepts(Set<OWLClassExpression> class_exprs, OWLClassAxiom axiom) {
 		Set<OWLClass> focusConcepts = new HashSet<>();
 		for (OWLClassExpression class_expr : class_exprs) {
@@ -512,18 +487,17 @@ public class SubsumptionNormalFormBuilderSHIELD {
 		
 // Only needed to handle subsumption w.r.t. chained properties for purposes of creating the SNF
 // TODO:  CustomSubsumptionTesterSHIELD does not support subsumption w.r.t. chained properties.  Should we add?
+	@SuppressWarnings("unused")
 	private boolean isSubClassOfEntailed(OWLObjectSomeValuesFrom prop1, OWLObjectSomeValuesFrom prop2) {
 		boolean isSubClassOf = false;
 		if (superProps.get(prop1.getProperty().asOWLObjectProperty())
 				.contains(prop2.getProperty().asOWLObjectProperty())) {
-			scoe_cnt++;
 			if (chained.get(prop1.getProperty()) == null && chained.get(prop2.getProperty()) == null
 					&& !transitive.contains(prop1.getProperty()) && !transitive.contains(prop2.getProperty())) {
 					OWLClass con1 = prop1.getFiller().asOWLClass();
 					OWLClass con2 = prop2.getFiller().asOWLClass();
 					isSubClassOf = con1.equals(con2) || subsumptionTester.isSubsumedBy(con1, con2, kernelOwlReasoner);
 			} else {
-				scoe_chained_cnt++;
 			}
 		}
 		return isSubClassOf;
@@ -565,6 +539,7 @@ public class SubsumptionNormalFormBuilderSHIELD {
 
 	}
 
+	@SuppressWarnings("unused")
 	private HashSet<SVF> expandChain(OWLObjectProperty prop, OWLClass filler) {
 		HashSet<SVF> svfs = new HashSet<>();
 		svfs.add(new SVF(prop, filler));
@@ -607,6 +582,7 @@ public class SubsumptionNormalFormBuilderSHIELD {
 		return superPropsStream.collect(Collectors.toList());
 	}
 
+	@SuppressWarnings("unused")
 	private boolean isSubsumedBy(SVF svf1, SVF svf2, OWLReasoner owlReasoner) {
 		return subsumptionTester.isSubsumedBy(svf1.prop, svf2.prop) && isSubsumedBy(svf1.filler, svf2.filler, owlReasoner);
 	}
@@ -668,9 +644,9 @@ public class SubsumptionNormalFormBuilderSHIELD {
 		return situationAbsentRole;
 	}
 
-	
+	@SuppressWarnings("deprecation")
 	public Set<OWLClassAxiom> getLogicalAxioms(OWLClass concept, OWLOntology statementOntology) {
-		Set<OWLClassAxiom> logicalAxioms = new HashSet();
+		Set<OWLClassAxiom> logicalAxioms = new HashSet<OWLClassAxiom>();
 		for (OWLClassAxiom axiom : statementOntology.getAxioms(concept)) {
 			if (axiom.isLogicalAxiom()) {
 				logicalAxioms.add(axiom);

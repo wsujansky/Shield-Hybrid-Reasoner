@@ -88,7 +88,7 @@ public boolean isSubClassOf() {
 	
 	public String propertiesToString(Set<OWLObjectSomeValuesFrom> ungroupedProps) {
 		String returnString = new String("  Normalized Properties: \n");
-		for (Iterator iterator = ungroupedProps.iterator(); iterator.hasNext();) {
+		for (Iterator<OWLObjectSomeValuesFrom> iterator = ungroupedProps.iterator(); iterator.hasNext();) {
 			OWLObjectSomeValuesFrom owlObjectSomeValuesFrom = (OWLObjectSomeValuesFrom) iterator.next();
 			returnString = returnString + "    " + owlObjectSomeValuesFrom.toString() + "\n";
 		}
@@ -97,7 +97,7 @@ public boolean isSubClassOf() {
 	
 	public String focusConceptsToString(Set<OWLClass> focusConcepts) {
 		String returnString = new String("  Normalized Focus Concepts: \n");
-		for (Iterator iterator = focusConcepts.iterator(); iterator.hasNext();) {
+		for (Iterator<OWLClass> iterator = focusConcepts.iterator(); iterator.hasNext();) {
 			OWLClass owlClass = (OWLClass) iterator.next();
 			returnString = returnString + "    " + owlClass.toString() + "\n";
 		}

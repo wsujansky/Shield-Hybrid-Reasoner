@@ -1,6 +1,5 @@
 package gov.hhs.fda.shield;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -11,8 +10,6 @@ import org.semanticweb.elk.owlapi.ElkConverter;
 import org.semanticweb.elk.reasoner.taxonomy.model.TaxonomyNode;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLAnnotation;
-import org.semanticweb.owlapi.model.OWLAnnotationAssertionAxiom;
-import org.semanticweb.owlapi.model.OWLAnnotationAxiom;
 import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
@@ -24,12 +21,10 @@ import org.semanticweb.owlapi.model.OWLObjectPropertyAxiom;
 import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
-import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
 import org.semanticweb.owlapi.model.OWLSubObjectPropertyOfAxiom;
 import org.semanticweb.owlapi.search.EntitySearcher;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 
-import gov.hhs.fda.shield.SubsumptionNormalFormSHIELD;
 import gov.hhs.fda.shield.temporalreasoning.TemporalExpressionSubsumptionTester;
 
 public class CustomSubsumptionTesterSHIELD {
@@ -83,8 +78,8 @@ public class CustomSubsumptionTesterSHIELD {
         OWLClassExpression subNodeFiller = subNodeClassExpression.getFiller();
         OWLObjectProperty superNodeProperty = superNodeClassExpression.getProperty().getNamedProperty();
         OWLClassExpression superNodeFiller = superNodeClassExpression.getFiller();
-//System.out.println("Sub property: " + subNodeClassExpression);
-//System.out.println("Super property " + superNodeClassExpression);
+//DEBUG System.out.println("Sub property: " + subNodeClassExpression);
+//DEBUG System.out.println("Super property " + superNodeClassExpression);
         if (isSubsumedBy(subNodeproperty,superNodeProperty) &&
         	isSubsumedBy(intersectionIfSingleton(subNodeFiller), intersectionIfSingleton(superNodeFiller), owlReasoner) ) {
         	return true;
@@ -95,37 +90,27 @@ public class CustomSubsumptionTesterSHIELD {
         }
 	}
 
-/*** TEMP OUT	
 	public boolean isSubsumedBy(OWLObjectProperty subNodePropertyExpression, OWLObjectProperty superNodePropertyExpression) {
-		if (subNodePropertyExpression.equals(superNodePropertyExpression))
-			return true; // TODO: Later, generalize to handle property hierarchies and chains in the
-									// kernel ontology
-		return false;
-	}
-TEMP OUT ***/
 
-/*** TEMP OUT  ***/
-	public boolean isSubsumedBy(OWLObjectProperty subNodePropertyExpression, OWLObjectProperty superNodePropertyExpression) {
-//if (subNodePropertyExpression.getIRI().toString().contains("STARTS-WITHIN")) {
-//System.out.println("Sub object property: " + subNodePropertyExpression);
-//System.out.println("Super object property " + superNodePropertyExpression);
-//}
+//DEBUG if (subNodePropertyExpression.getIRI().toString().contains("STARTS-WITHIN")) {
+//DEBUG System.out.println("Sub object property: " + subNodePropertyExpression);
+//DEBUG System.out.println("Super object property " + superNodePropertyExpression);
+//DEBUG }
 		if (subNodePropertyExpression.equals(superNodePropertyExpression))
 			return true; // TODO: Later, generalize to handle property hierarchies and chains in the
-							// kernel ontology
+						 // kernel ontology
 		if (hasTemporalDefinition(subNodePropertyExpression) && hasTemporalDefinition(superNodePropertyExpression))
 			return isPropertySubsumedByAsInferred(subNodePropertyExpression, superNodePropertyExpression);
 		if (!hasTemporalDefinition(subNodePropertyExpression) && !hasTemporalDefinition(superNodePropertyExpression)) 
 			return isPropertySubsumedByAsStated(subNodePropertyExpression, superNodePropertyExpression);
 		return false;
 	}
-/*** TEMP OUT ***/
 	
 	public boolean isSubsumedBy(OWLClass subNodeOwlClass, OWLClass superNodeOwlClass, OWLReasoner owlReasoner) {
 		if (subNodeOwlClass.equals(superNodeOwlClass))
 			return true;  // equivalent classes subsume each other
 		Set<OWLClass> subClassSet = owlReasoner.getSubClasses(superNodeOwlClass, false).getFlattened();
-	    for (Iterator iterator = subClassSet.iterator(); iterator.hasNext();) {
+	    for (Iterator<OWLClass> iterator = subClassSet.iterator(); iterator.hasNext();) {
 			OWLClass candidateOwlSubClass = (OWLClass) iterator.next();
 			if (candidateOwlSubClass.equals(subNodeOwlClass)) {
 				return true;
@@ -149,9 +134,10 @@ TEMP OUT ***/
 		}
 		else
 		return false;  // Default if the pair of expression types aren't handled above 
-					   // (i.e., the OWLClassExpression types can't be compared are unrecognized)
+					   // (i.e., the OWLClassExpression types can't be compared or are unrecognized)
 	}
 	
+	// Reverses subsumption logic if both expressions are negated ("absent")
 	public boolean isSubsumedBy(SubsumptionNormalFormSHIELD subSNF, SubsumptionNormalFormSHIELD superSNF, OWLReasoner kernelReasoner, OWLReasoner statementReasoner) {
 		if (subSNF.isAbsent() && superSNF.isAbsent()) 
 			return isSubsumedByInternal(superSNF, subSNF, kernelReasoner, statementReasoner);
@@ -160,29 +146,23 @@ TEMP OUT ***/
 	}
 	
 	private boolean isSubsumedByInternal(SubsumptionNormalFormSHIELD subSNF, SubsumptionNormalFormSHIELD superSNF, OWLReasoner kernelReasoner, OWLReasoner statementReasoner) {
-
-		
 		boolean focusConceptsSubsumedBy =  superSNF.getFocusConcepts().stream()
                 .allMatch(conSup -> subSNF.getFocusConcepts().stream()
                  .anyMatch(conSub -> isSubsumedBy(conSub, conSup, statementReasoner)));
-
 		boolean rolesSubsumedBy =  superSNF.getUngroupedProps().stream()
                 .allMatch(propSup -> subSNF.getUngroupedProps().stream()
                  .anyMatch(propSub -> isSubsumedBy(propSub, propSup, kernelReasoner)));
-
 		boolean isSubsumedBy = focusConceptsSubsumedBy && rolesSubsumedBy;
 		return isSubsumedBy;
 	}
 
-/*** TEMP OUT ***/
 	private boolean isPropertySubsumedByAsStated(OWLObjectProperty subNodePropertyExpression, OWLObjectProperty superNodePropertyExpression) {
 		if (subNodePropertyExpression.equals(superNodePropertyExpression))
 			return true;
 		if (subNodePropertyExpression.isOWLTopObjectProperty())
 			return false;
 		Set<OWLObjectProperty> directParentPropertiesAsStated = getDirectParentPropertiesAsStated(subNodePropertyExpression);
-		boolean returnValue = false;  // initialize, and proceed to test parents of superNodePropertyExpression and (recursively) ancestors
-		for (Iterator iterator = directParentPropertiesAsStated.iterator(); iterator.hasNext();) {
+		for (Iterator<OWLObjectProperty> iterator = directParentPropertiesAsStated.iterator(); iterator.hasNext();) {
 			OWLObjectProperty candidateSubsumedProperty = (OWLObjectProperty) iterator.next();
 				if (isPropertySubsumedByAsStated(candidateSubsumedProperty, superNodePropertyExpression))
 					return true;
@@ -193,13 +173,12 @@ TEMP OUT ***/
 	private boolean isPropertySubsumedByAsInferred(OWLObjectProperty subNodePropertyExpression, OWLObjectProperty superNodePropertyExpression) {
       String superExpression = getTemporalPropertyDefinitionAsString(superNodePropertyExpression);
       String subExpression = getTemporalPropertyDefinitionAsString(subNodePropertyExpression);
-		TemporalExpressionSubsumptionTester tester = new TemporalExpressionSubsumptionTester();
 		return temporalSubsumptionTester.subsumes(superExpression, subExpression);
 	}
 
 	private boolean hasTemporalDefinition(OWLObjectProperty owlProperty) {
 	    Collection<OWLAnnotation> annotations = EntitySearcher.getAnnotations(owlProperty, ontology_);
-	    for (Iterator iterator = annotations.iterator(); iterator.hasNext();) {
+	    for (Iterator<OWLAnnotation> iterator = annotations.iterator(); iterator.hasNext();) {
 	    	OWLAnnotation owlAnnotation = (OWLAnnotation) iterator.next();
 	    	if (owlAnnotation.getProperty().getIRI().toString().equals("http://www.w3.org/2000/01/rdf-schema#isDefinedBy")) 
 	    		return true; 
@@ -210,7 +189,7 @@ TEMP OUT ***/
 	private String getTemporalPropertyDefinitionAsString(OWLObjectProperty propertyExpression) {
 		String definition = "";  // 
 	    Collection<OWLAnnotation> annotations = EntitySearcher.getAnnotations(propertyExpression, ontology_);
-	    for (Iterator iterator = annotations.iterator(); iterator.hasNext();) {
+	    for (Iterator<OWLAnnotation> iterator = annotations.iterator(); iterator.hasNext();) {
 	    	OWLAnnotation owlAnnotation = (OWLAnnotation) iterator.next();
 	    	if (owlAnnotation.getProperty().getIRI().toString().equals("http://www.w3.org/2000/01/rdf-schema#isDefinedBy")) {
 	    		String quotedValue = owlAnnotation.getValue().toString();
@@ -220,13 +199,11 @@ TEMP OUT ***/
 		return definition;
 	}
 
-
-
-
+	@SuppressWarnings("deprecation")
 	private Set<OWLObjectProperty> getDirectParentPropertiesAsStated(OWLObjectProperty subNodePropertyExpression) {
-		Set<OWLObjectProperty> parentProperties = new HashSet(); // this will be returned
+		Set<OWLObjectProperty> parentProperties = new HashSet<OWLObjectProperty>(); // this will be returned
 		Set<OWLObjectPropertyAxiom> subPropertyAxioms = this.ontology_.getAxioms(subNodePropertyExpression);
-		for (Iterator iterator = subPropertyAxioms.iterator(); iterator.hasNext();) {
+		for (Iterator<OWLObjectPropertyAxiom> iterator = subPropertyAxioms.iterator(); iterator.hasNext();) {
 			OWLObjectPropertyAxiom subPropertyAxiom = (OWLObjectPropertyAxiom) iterator.next();
 			if (subPropertyAxiom instanceof OWLSubObjectPropertyOfAxiom) {
 				OWLObjectProperty superProperty = (((OWLSubObjectPropertyOfAxiom) subPropertyAxiom).getSuperProperty().asOWLObjectProperty());
@@ -235,24 +212,7 @@ TEMP OUT ***/
 		}
 		return parentProperties;
 	}
-/*** TEMP OUT ***/
-	
-/** NO LONGER NEEDED
-	private Set<OWLObjectProperty> getAllSubsumedPropertiesAsStated(OWLObjectProperty superNodePropertyExpression) {
-		Set<OWLObjectProperty> subsumingProperties = new HashSet(); // this will be returned
-		Set<OWLObjectPropertyAxiom> superPropertyAxioms = this.ontology_.getAxioms(superNodePropertyExpression);
-		for (Iterator iterator = superPropertyAxioms.iterator(); iterator.hasNext();) {
-			OWLObjectPropertyAxiom superPropertyAxiom = (OWLObjectPropertyAxiom) iterator.next();
-			if (superPropertyAxiom instanceof OWLSubObjectPropertyOfAxiom) {
-				OWLObjectProperty subProperty = (((OWLSubObjectPropertyOfAxiom) superPropertyAxiom).getSubProperty().asOWLObjectProperty());
-				subsumingProperties.add(subProperty);
-				subsumingProperties.addAll(getAllSubsumedPropertiesAsStated(subProperty));  // recurse to get all descendants
-			}
-		}
-		return subsumingProperties;
-	}
-**/
-	
+
 
 	//For testing only
 	public boolean classExpressionIsSubsumedBy(String subClassName, String superClassName, OWLOntology ontology, OWLReasoner kernelReasoner, OWLReasoner classifiedReasoner) {
@@ -276,15 +236,15 @@ TEMP OUT ***/
 
 
 	
-	
+	@SuppressWarnings("deprecation")
 	public static OWLClassExpression getNormalizedAxiomDefinition(ElkClass elkClass, OWLOntology ontology) {
 		OWLClass owlClass = ElkConverter.getInstance().convert(elkClass);
         Set<OWLAxiom> referencingAxioms = ontology.getReferencingAxioms(owlClass, true);
-        for (Iterator iterator = referencingAxioms.iterator(); iterator.hasNext();) {
+        for (Iterator<OWLAxiom> iterator = referencingAxioms.iterator(); iterator.hasNext();) {
 			OWLAxiom owlAxiom = (OWLAxiom) iterator.next();
 			if (owlAxiom instanceof OWLEquivalentClassesAxiom) {
 				Set<OWLClassExpression> nestedOwlClassExpressions = ((OWLEquivalentClassesAxiom) owlAxiom).getClassExpressions();
-				for (Iterator iterator2 = nestedOwlClassExpressions.iterator(); iterator2.hasNext();) {
+				for (Iterator<OWLClassExpression> iterator2 = nestedOwlClassExpressions.iterator(); iterator2.hasNext();) {
 					OWLClassExpression owlClassExpression = (OWLClassExpression) iterator2.next();
 						if (owlClassExpression.equals((OWLClassExpression) owlClass)) {
 							System.out.println("    DEFINING AXIOM: " + owlAxiom);
@@ -338,12 +298,14 @@ TEMP OUT ***/
 	}
 	
 		// Probably not needed
+		@SuppressWarnings("unused")
 		private boolean bothClassExpressionsValidStatementDefinitions(OWLClassExpression subNodeElkClass, OWLClassExpression superNodeElkClass) {
 			return true;  //TEMP placeholder
 		}
 		
 
 		// Probably not needed
+		@SuppressWarnings("unused")
 		private boolean bothClassExpressionsSameType(OWLClassExpression subNodeElkClass, OWLClassExpression superNodeElkClass) {
 			return true;  //TEMP placeholder
 		}

@@ -3,17 +3,11 @@ package gov.hhs.fda.shield;
 import org.apache.log4j.Logger;
 import org.semanticweb.elk.owlapi.ElkReasonerConfiguration;
 import org.semanticweb.elk.owlapi.ElkReasonerFactory;
-import org.semanticweb.elk.reasoner.config.ReasonerConfiguration;
 import org.semanticweb.owlapi.model.OWLOntology;
-import org.semanticweb.owlapi.model.OWLOntologyCreationException;
-import org.semanticweb.owlapi.model.OWLOntologyManager;
-import org.semanticweb.owlapi.model.UnknownOWLOntologyException;
 import org.semanticweb.owlapi.reasoner.IllegalConfigurationException;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import org.semanticweb.owlapi.reasoner.OWLReasonerConfiguration;
 import org.semanticweb.owlapi.reasoner.OWLReasonerFactory;
-
-import org.semanticweb.elk.owlapi.ElkReasoner;  // TEMP
 
 public class ElkReasonerFactorySHIELD implements OWLReasonerFactory {
 
@@ -85,20 +79,20 @@ public class ElkReasonerFactorySHIELD implements OWLReasonerFactory {
 		ElkReasonerSHIELD reasoner = null;  // Initialized outside try/catch so it can be returned
 		ElkReasonerConfiguration elkReasonerConfig;
 		if (config != null) {
-//System.out.println("config != null");
+//DEBUG System.out.println("config != null");
 			if (config instanceof ElkReasonerConfiguration) {//
-//System.out.println("config instanceof ElkReasonerConfiguration");
+//DEBUG System.out.println("config instanceof ElkReasonerConfiguration");
 				elkReasonerConfig = (ElkReasonerConfiguration) config;
 			} else {
-//System.out.println("config NOT instanceof ElkReasonerConfiguration");				
+//DEBUG System.out.println("config NOT instanceof ElkReasonerConfiguration");				
 				elkReasonerConfig = new ElkReasonerConfiguration(config);
 			}
 		} else {
-//System.out.println("config = null");
+//DEBUG System.out.println("config = null");
 
 			elkReasonerConfig = new ElkReasonerConfiguration();
 		}
-//System.out.println("ELKReasonerConfiguration Num Workers: " + elkReasonerConfig.getElkConfiguration().getConfiguration().getParameter(ReasonerConfiguration.NUM_OF_WORKING_THREADS));
+//DEBUG System.out.println("ELKReasonerConfiguration Num Workers: " + elkReasonerConfig.getElkConfiguration().getConfiguration().getParameter(ReasonerConfiguration.NUM_OF_WORKING_THREADS));
 
 		reasoner = new ElkReasonerSHIELD(ontology, isBufferingMode, elkReasonerConfig);
 

@@ -1,56 +1,33 @@
 package gov.hhs.fda.shield;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 import java.util.Set;
-
-import javax.annotation.Nonnull;
-
 import org.semanticweb.elk.owl.exceptions.ElkException;
 import org.semanticweb.elk.owl.interfaces.ElkClass;
-import org.semanticweb.elk.owl.util.Comparators;
 import org.semanticweb.elk.owlapi.ElkConverter;
 import org.semanticweb.elk.owlapi.ElkReasoner;
-import org.semanticweb.elk.owlapi.wrapper.ElkClassWrap;
 import org.semanticweb.elk.owlapi.wrapper.OwlConverter;
 import org.semanticweb.elk.reasoner.ElkInconsistentOntologyException;
 import org.semanticweb.elk.reasoner.taxonomy.ConcurrentClassTaxonomy;
 import org.semanticweb.elk.reasoner.taxonomy.NonBottomClassNode;
-//import org.semanticweb.elk.reasoner.taxonomy.model.Node;  // So doesn't conflict with import org.semanticweb.owlapi.reasoner.Node;
-import org.semanticweb.elk.reasoner.taxonomy.model.Taxonomy;
 import org.semanticweb.elk.reasoner.taxonomy.model.TaxonomyNode;
 import org.semanticweb.elk.reasoner.taxonomy.model.UpdateableTaxonomyNode;
 import org.semanticweb.elk.reasoner.taxonomy.model.UpdateableBottomNode;
-import org.semanticweb.elk.util.collections.ArrayHashSet;
 import org.semanticweb.owlapi.model.IRI;
-import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassAxiom;
-import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLDataFactory;
-import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom;
 import org.semanticweb.owlapi.model.OWLOntology;
-import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
 import org.semanticweb.owlapi.reasoner.Node;
 import org.semanticweb.owlapi.reasoner.NodeSet;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
-import org.semanticweb.owlapi.reasoner.impl.OWLClassNode;
-import org.semanticweb.owlapi.reasoner.structural.StructuralReasoner;
-
-import gov.hhs.fda.shield.ReasonerExplorer;
-import gov.hhs.fda.shield.SubsumptionNormalFormBuilderSHIELD;
-import gov.hhs.fda.shield.SubsumptionNormalFormSHIELD;
 
 public class StatementClassifierSHIELD {
 	
-	private OWLOntology kernelOntology_;
+	@SuppressWarnings("unused")
 	private OWLOntology statementOntology_;
 	private OWLReasoner kernelOwlReasoner_;
 	private OWLReasoner statementOwlReasoner_;
@@ -69,7 +46,8 @@ public class StatementClassifierSHIELD {
 		subsumptionNormalFormBuilder.init();
 		subsumptionNormalFormBuilder.generate();
 		subsumptionTester = new CustomSubsumptionTesterSHIELD(kernelOntology);
-		subsumptionNormalFormBuilder.testSubsumptionsPairwise();
+		// METHOD WAS COMMENTED OUT IN SubsumptionNormalFormBuilderSHIELD
+		// subsumptionNormalFormBuilder.testSubsumptionsPairwise();
 
 		
 	}
@@ -81,29 +59,27 @@ public class StatementClassifierSHIELD {
 	
 	public void classifyStatementConcepts(OWLOntology kernelOntology, OWLOntology statementOntology, ElkReasoner kernelElkReasoner, OWLReasoner statementOwlReasoner) {
 		try {
-//NOT NEEDED!			StatementClassifierSHIELD classifier = new StatementClassifierSHIELD(kernelOntology, statementOntology, kernelElkReasoner, statementOwlReasoner);
 			ConcurrentClassTaxonomy destinationTaxonomy = (ConcurrentClassTaxonomy) kernelElkReasoner.getInternalReasoner().getTaxonomy();
-System.out.println("ORIGINAL KERNEL REASONER TAXONOMY - IN CLASSIFIER - BEFORE REMOVAL OF STATEMENT-CONCEPT");
-ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) kernelElkReasoner, false);
+//DEBUG System.out.println("ORIGINAL KERNEL REASONER TAXONOMY - IN CLASSIFIER - BEFORE REMOVAL OF STATEMENT-CONCEPT");
+//DEBUG ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) kernelElkReasoner, false);
 			boolean removed = removeStatementHierachyFromKernelTaxonomy("Statement-Concept", statementOntology, statementOwlReasoner, destinationTaxonomy); 
 			if (!removed) {
 				throw new RuntimeException("Cannot remove Statement hierarchy from Kernel reasoner taxonomy; hierarchy could not be found.");
 			}
-System.out.println("ORIGINAL KERNEL REASONER TAXONOMY - IN CLASSIFIER - AFTER REMOVAL OF STATEMENT-CONCEPT");
-ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) kernelElkReasoner, false);
+//DEBUG System.out.println("ORIGINAL KERNEL REASONER TAXONOMY - IN CLASSIFIER - AFTER REMOVAL OF STATEMENT-CONCEPT");
+//DEBUG ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) kernelElkReasoner, false);
 
 			TaxonomyNode<ElkClass> rootKernelTaxonomyNodeForClassification = copyNamedNodeFromStatementToKernelReasoner("Statement-Concept", statementOntology, statementOwlReasoner, kernelElkReasoner);
-System.out.println("ORIGINAL KERNEL REASONER TAXONOMY - IN CLASSIFIER");
-ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) kernelElkReasoner, false);
+//DEBUG System.out.println("ORIGINAL KERNEL REASONER TAXONOMY - IN CLASSIFIER");
+//DEBUG ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) kernelElkReasoner, false);
 			NodeSet<OWLClass> subNodes = getSubsumedNodesFromOwlReasoner("Statement-Concept", statementOwlReasoner, statementOntology);
 
-// DEBUGfor (Node<OWLClass> node : subNodes) {
+// DEBUG for (Node<OWLClass> node : subNodes) {
 // DEBUG	System.out.println("****TRYING TO CLASSIFY: "+ node.getEntities().iterator().next().getIRI().toString());
 // DEBUG}
 			
-			for (Iterator iterator = subNodes.iterator(); iterator.hasNext();) {
+			for (Iterator<Node<OWLClass>> iterator = subNodes.iterator(); iterator.hasNext();) {
 				Node<OWLClass> candidateNode = (Node<OWLClass>) iterator.next();
-//				if (sourceOwlClassNode.getEntities().iterator().next().getIRI().toString().contains(sourceTaxonomyTopClass)) {
 				if (!candidateNode.isBottomNode() && 
 					logicallyDefinedInOntology(candidateNode.getEntities().iterator().next(), statementOntology)) {
 						Node<OWLClass> rootKernelTaxonomyNodeForClassificationAsOwlNode = 
@@ -136,8 +112,6 @@ ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) kernelElkReasoner, f
 			for (ElkClass currentElkClass : childOfTaxonomyTopNode.getMembers()) { // iterate through each member of the child (an ElkClass)
 				if(ElkConverter.getInstance().convert(currentElkClass).equals(targetNode.getEntities().iterator().next())) { 
 					removeTaxonomySubTree(childOfTaxonomyTopNode, taxonomyTopNode, kernelElkReasonerTaxonomy);
-//					disconnectNodes((NonBottomClassNode) childOfTaxonomyTopNode, (NonBottomClassNode) taxonomyTopNode);
-//					kernelElkReasonerTaxonomy.removeNode((UpdateableTaxonomyNode) childOfTaxonomyTopNode);
 					return true;
 				}
 			}
@@ -158,23 +132,11 @@ ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) kernelElkReasoner, f
 																										// sub-tree
 		}
 		disconnectNodes((NonBottomClassNode) taxonomyNode, (NonBottomClassNode) parentTaxonomyNode);
-		kernelElkReasonerTaxonomy.removeNode((UpdateableTaxonomyNode) taxonomyNode);
+		kernelElkReasonerTaxonomy.removeNode((UpdateableTaxonomyNode<ElkClass>) taxonomyNode);
 	}
 
 
-/* TEMP TO COPY
-	public static TaxonomyNode<ElkClass> createElkTaxonomyReasonerNode(Node<OWLClass> sourceNode, ConcurrentClassTaxonomy destinationElkTaxonomy) {
-		Set<ElkClass> membersToMove = new HashSet<ElkClass>();
-		OwlConverter converter = OwlConverter.getInstance();
-		for (OWLClass clazz : sourceNode.getEntities()) 
-			membersToMove.add(converter.convert(clazz));
-		TaxonomyNode<ElkClass> newDestinationNode = destinationElkTaxonomy.getCreateNonBottomClassNode(membersToMove);
-		return newDestinationNode;
-	}
-*/
-
-
-	public boolean classifyStatementConcept(TaxonomyNode<ElkClass> candidateNode, SubsumptionNormalFormSHIELD candidateSNF, TaxonomyNode<ElkClass> predicateNode, Taxonomy destinationTaxonomy) {
+	public boolean classifyStatementConcept(TaxonomyNode<ElkClass> candidateNode, SubsumptionNormalFormSHIELD candidateSNF, TaxonomyNode<ElkClass> predicateNode, ConcurrentClassTaxonomy destinationTaxonomy) {
 		 boolean successfullyClassified = false;
 //DEBUG if (candidateNode.getMembers().iterator().next().getIri().toString().contains("Temporally")) {
 //DEBUG 	   System.out.println("Candidate:  " + candidateNode.getMembers().iterator().next().getIri().toString());
@@ -218,7 +180,7 @@ ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) kernelElkReasoner, f
 		 else return false;
 	}
 
-	private void findAndConnectMostGeneralSubsumees(TaxonomyNode<ElkClass> predicateNode, SubsumptionNormalFormSHIELD predicateSNF, TaxonomyNode<ElkClass> parentCandidateNode, Taxonomy destinationTaxonomy) {
+	private void findAndConnectMostGeneralSubsumees(TaxonomyNode<ElkClass> predicateNode, SubsumptionNormalFormSHIELD predicateSNF, TaxonomyNode<ElkClass> parentCandidateNode, ConcurrentClassTaxonomy destinationTaxonomy) {
 		Set<? extends TaxonomyNode<ElkClass>> set = parentCandidateNode.getDirectSubNodes();
 		List<TaxonomyNode<ElkClass>> list = new ArrayList<>(set);  // Converted to List so it will be mutable
 		for (TaxonomyNode<ElkClass> candidateNode : list) {  // for each child of the parentCandidateNode, check if it is subsumed by the predicateNode
@@ -304,25 +266,10 @@ ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) kernelElkReasoner, f
 		try {
 			// First, retrieve the OWLClass node that represents the root concept of the statement hierarchy
 			// from the statementOwlReasoner ("Statement-Concept", in the default version of the statement sub-ontology)
-//			OWLDataFactory factory = statementOntology.getOWLOntologyManager().getOWLDataFactory();
-//			OWLClass targetNamedClass = factory
-//					.getOWLClass(IRI.create("http://www.hhs.fda.org/shield/SWEC-Ontology#" + targetNodeName));
-//			OWLClass topStatementReasonerClassNode = statementOwlReasoner.getTopClassNode().getEntities().iterator()
-//					.next();
-//			NodeSet<OWLClass> subNodes = statementOwlReasoner.getSubClasses(topStatementReasonerClassNode, false);
-//			Node<OWLClass> targetNode = null; // will be assigned below if a node containing the targetNodeName class is
-//										      // among the nodes in the statementOwlReasoner taxonomy
-//			for (Iterator iterator = subNodes.iterator(); iterator.hasNext();) {
-//				Node<OWLClass> subNode = (Node<OWLClass>) iterator.next();
-//				if (subNode.getEntities().iterator().next().equals(targetNamedClass)) {
-//					targetNode = subNode;
-//				}
-//			}
 			Node<OWLClass> targetNode = getNamedOwlClassNodeFromStatementReasoner(targetNodeName,
 				statementOntology, statementOwlReasoner);
 			if (targetNode == null) {
 				throw new RuntimeException("Named node to move to kernelReasoner not fount in the StatementReasoner: "
-//						+ targetNamedClass.getIRI().toString());
 						+ "http://www.hhs.fda.org/shield/SWEC-Ontology#" + targetNodeName);
 			}
 			if (targetNode.isBottomNode()) {
@@ -334,16 +281,12 @@ ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) kernelElkReasoner, f
 			ConcurrentClassTaxonomy destinationTaxonomy = (ConcurrentClassTaxonomy) kernelElkReasoner
 					.getInternalReasoner().getTaxonomy();
 			TaxonomyNode<ElkClass> destinationTaxonomyTopNode = destinationTaxonomy.getTopNode();
-//OUT			if (!targetNode.isBottomNode()) {
-// DEBUG				System.out.println("Node Class to Migrate: " + targetNode.getEntities().iterator().next().getIRI());
+// DEBUG System.out.println("Node Class to Migrate: " + targetNode.getEntities().iterator().next().getIRI());
 			newDestinationElkClassNode = createElkTaxonomyReasonerNode(targetNode, destinationTaxonomy);
 			((NonBottomClassNode) destinationTaxonomyTopNode)
 					.addDirectSubNode((UpdateableTaxonomyNode<ElkClass>) newDestinationElkClassNode);
 				((NonBottomClassNode) newDestinationElkClassNode)
 						.addDirectSuperNode((UpdateableTaxonomyNode<ElkClass>) destinationTaxonomyTopNode);
-//			} else
-//				throw new RuntimeException(
-//						"Named node to move to under the top of the kernelReasoner is the bottom node.  That operation not allowed.");
 		} catch (ElkInconsistentOntologyException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -356,7 +299,6 @@ ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) kernelElkReasoner, f
 	
 	private Node<OWLClass> getNamedOwlClassNodeFromStatementReasoner(String targetNodeName,
 			OWLOntology statementOntology, OWLReasoner statementOwlReasoner) {
-		TaxonomyNode<ElkClass> newDestinationElkClassNode = null;
 			// First, retrieve the OWLClass node that represents the root concept of the statement hierarchy
 			// from the statementOwlReasoner ("Statement-Concept", in the default version of the statement sub-ontology)
 			OWLDataFactory factory = statementOntology.getOWLOntologyManager().getOWLDataFactory();
@@ -367,7 +309,7 @@ ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) kernelElkReasoner, f
 			NodeSet<OWLClass> subNodes = statementOwlReasoner.getSubClasses(topStatementReasonerClassNode, false);
 			Node<OWLClass> targetNode = null; // will be assigned below if a node containing the targetNodeName class is
 										      // among the nodes in the statementOwlReasoner taxonomy
-			for (Iterator iterator = subNodes.iterator(); iterator.hasNext();) {
+			for (Iterator<Node<OWLClass>> iterator = subNodes.iterator(); iterator.hasNext();) {
 				Node<OWLClass> subNode = (Node<OWLClass>) iterator.next();
 				if (subNode.getEntities().iterator().next().equals(targetNamedClass)) {
 					targetNode = subNode;
@@ -376,6 +318,7 @@ ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) kernelElkReasoner, f
 			return targetNode;
 	}
 
+	@SuppressWarnings("deprecation")
 	public static boolean logicallyDefinedInOntology(OWLClass candidateClass, OWLOntology ontology) {
 		Set<OWLClassAxiom> classAxioms = ontology.getAxioms(candidateClass);
 		boolean isLogicallyDefined = classAxioms.stream().anyMatch(x -> x.isLogicalAxiom());
