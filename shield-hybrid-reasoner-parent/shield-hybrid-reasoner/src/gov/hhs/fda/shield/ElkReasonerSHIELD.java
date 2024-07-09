@@ -144,7 +144,8 @@ public class ElkReasonerSHIELD extends ElkReasoner {
 */
 
 /* TEST IN */	public synchronized void moveStatementAxioms(String targetClassName, OWLOntology sourceOntology, OWLOntology destinationOntology, Boolean removeFromSourceOntology, OntologyType ontologyToReturn) {
-		OWLOntologyManager ontologyManager = sourceOntology.getOWLOntologyManager();
+		OWLOntologyManager ontologyManager = destinationOntology.getOWLOntologyManager();  // Very important that it's OWLOntologyManager from *desintationOntology*, not sourceOntology
+	//		OWLOntologyManager ontologyManager = sourceOntology.getOWLOntologyManager();
 		StructuralReasonerFactory structuralReasonerFactory = new StructuralReasonerFactory();
 		OWLReasoner structuralReasoner = structuralReasonerFactory.createNonBufferingReasoner(sourceOntology);
 		Set<OWLClass> subClassSet = ReasonerExplorer.buildSubClassSet(targetClassName, sourceOntology, structuralReasoner, true); // ORIG
@@ -240,7 +241,7 @@ System.out.println("REASONER: Removing/Adding the  Declaration Axiom for: " + ow
 	public void precomputeInferences(InferenceType... inferenceTypes)
 			throws ReasonerInterruptedException, TimeOutException,
 			InconsistentOntologyException {
-/** DO NOTHING, SO THE REASONER IS NOT MESSED UP WHEN STARTED BY PROTEGE... **
+/** DO NOTHING, SO THE REASONER IS NOT MESSED UP WHEN STARTED BY PROTEGE... **/
  		if (LOGGER_.isDebugEnabled())
  
 			LOGGER_.debug("precomputeInferences(InferenceType...)");
@@ -260,12 +261,72 @@ System.out.println("REASONER: Removing/Adding the  Declaration Axiom for: " + ow
 		} finally {
 			this.reasoner_.setProgressMonitor(this.secondaryProgressMonitor_);
 		}
-*****/
+/*****/
 	}
 	
 	
 	
 	protected void preComputeHierarchy() {
+		this.reasoner_ = new ReasonerFactory().createReasoner(
+				new OwlOntologyLoader(owlOntology_, this.mainProgressMonitor_),
+				stageExecutor_, config_);
+		this.reasoner_.setAllowFreshEntities(isAllowFreshEntities);
+		// use the secondary progress monitor by default, when necessary, we
+		// switch to the primary progress monitor; this is to avoid bugs with
+		// progress monitors in Protege
+		this.reasoner_.setProgressMonitor(this.secondaryProgressMonitor_);
+		
+		OWLOntology statementOntology = createEmptyOwlOntology(OWLManager.createOWLOntologyManager());  // Will be populated with statement axioms by moveStatementAxioms
+		
+		// The statement axioms (rooted at the first parameter of the call) are all moved from the loadedOntology
+		// into the statementOntology.  The resulting loadedOntology is assigned the name kernelOntology.  It will
+		// ultimately also contain the correctly classified statement concepts.  Initially, it only
+		// contains kernel concepts.
+ 		moveStatementAxioms("Statement-Concept", owlOntology_, statementOntology, false, OntologyType.SOURCE);
+
+ 		// DEBUG System.out.println("REASONER IN preComputeHierarchy: Completed moving of axioms from loaded to statement ontology");	
+ 		
+		// The kernel ontology is loaded into and classified by a standard ElkReasoner.  This classification
+		// of all kernel concepts is needed for the subsequent classification of the statement concepts
+		// within the kernel reasoner's taxonomy (because statement concepts are defined with respect to
+		// kernel concepts)
+		// NOT NEEDED ElkReasonerFactory elkReasonerFactory = new ElkReasonerFactory(); 
+		// NOT NEEDED ElkReasoner kernelElkReasoner = (ElkReasoner) elkReasonerFactory.createElkReasoner(this.owlOntology_,
+		//		                                                                           isBufferingMode, 
+		//		                                                                           config);	
+System.out.println("ORIGINAL KERNEL REASONER TAXONOMY - IN preComputeHierarchy");
+ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) this, false);
+
+//DEBUG System.out.println("ORIGINAL STATEMENT ONTOLOGY - IN reCreateReasoner: ");
+//DEBUG System.out.println(statementOntology); 
+
+//DEBUG System.out.println("ORIGINAL KERNEL REASONER TAXONOMY - IN reCreateReasoner");
+//DEBUG ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) kernelElkReasoner, false);
+	
+		// A StructuralReasoner instance is created to represent the stated hierarchy for the 
+		// statementOntology. This hierarchy is needed for the later classification of the statement 
+		// concepts into the kernel reasoner's taxonomy.
+		StructuralReasonerFactory structuralReasonerFactory = new StructuralReasonerFactory(); 
+		OWLReasoner statementOwlReasoner = structuralReasonerFactory.createNonBufferingReasoner(statementOntology);
+		
+// DEBUG  System.out.println("ORIGINAL STATEMENT REASONER TAXONOMY - IN reCreateReasoner");
+// DEBUG  ReasonerExplorer.printCurrentReasonerTaxonomy((StructuralReasoner) statementOwlReasoner, false);
+		
+		// Instantiation of a StatementClassifierSHIELD classifier creates subsumption-normal-form 
+		// representations of each statement in the statementOntology.  These representations are 
+		// needed by the subsequent classifyStatementConcepts operation.
+		this.classifier = new StatementClassifierSHIELD(this.owlOntology_, statementOntology, this, statementOwlReasoner);
+		classifier.classifyStatementConcepts(this.owlOntology_, statementOntology, this, statementOwlReasoner);
+		
+		// After all statements have been classified within the taxonomy of the kernelReasoner, we set
+		// it as the internal reasoner for this instance of ElkReasonerSHIELD.  
+//statementOwlReasoner.dispose();
+//		this.reasoner_ = kernelElkReasoner.getInternalReasoner();
+		
+System.out.println("POST-MIGRATION KERNEL REASONER TAXONOMY - IN preComputeHierarchy");
+ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) this, false);		
+
+/*** ORIGINAL VERSION  
 		OWLOntology statementOntology = createEmptyOwlOntology(owlOntology_.getOWLOntologyManager());  // Will be populated with statement axioms by moveStatementAxioms
 		moveStatementAxioms("Statement-Concept", owlOntology_, statementOntology, true, OntologyType.SOURCE);
 		ElkReasonerFactory elkReasonerFactory = new ElkReasonerFactory(); 
@@ -291,7 +352,9 @@ System.out.println("REASONER: Removing/Adding the  Declaration Axiom for: " + ow
 				this.reasoner_ = kernelElkReasoner.getInternalReasoner();
 				
 // DEBUG				System.out.println("POST-RECOMPUTATION KERNEL REASONER TAXONOMY - IN PRECOMPUTE");
-// DEBUG				ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) this, false);		
+// DEBUG				ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) this, false);	
+	
+   END ORIGINAL VERSION  ***/
 	}
 	
 	
