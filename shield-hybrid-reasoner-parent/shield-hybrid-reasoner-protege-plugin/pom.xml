@@ -34,7 +34,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <!-- changed to use new version of elk-reasoner-shield-->
         <dependency>
             <groupId>org.semanticweb.elk</groupId>
             <artifactId>elk-reasoner-shield</artifactId>
