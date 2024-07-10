@@ -36,8 +36,8 @@
         </dependency>
         <dependency>
             <groupId>org.semanticweb.elk</groupId>
-            <artifactId>elk-reasoner</artifactId>
-            <version>0.4.3-LOCAL</version>
+            <artifactId>elk-reasoner-shield</artifactId>
+            <version>0.4.3</version>
             <exclusions>
                 <exclusion>
                     <groupId>log4j</groupId>
