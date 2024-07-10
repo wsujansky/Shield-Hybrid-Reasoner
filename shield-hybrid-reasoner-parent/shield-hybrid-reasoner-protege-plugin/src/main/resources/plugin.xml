@@ -3,8 +3,8 @@
 <plugin>
 
     <extension id="shieldabsent.reasoner.factory" point="org.protege.editor.owl.inference_reasonerfactory">
-        <name value="SHIELD Absent (Hybrid) 0.4.3"/>
-        <label value="SHIELD Absent (Hybrid) 0.4.3"/>
+        <name value="SHIELD Hybrid Reasoner 0.4.3"/>
+        <label value="SHIELD Hybrid Reasoner 0.4.3"/>
         <class value="gov.hhs.fda.shield.protege.ShieldAbsentProtegeReasonerFactory"/> 
 <!--        <class value="org.semanticweb.elk.protege.ProtegeReasonerFactory"/> -->
     </extension>
