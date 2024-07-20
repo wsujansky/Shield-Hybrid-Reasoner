@@ -7,15 +7,13 @@ import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.model.OWLOntologyStorageException;
-import org.semanticweb.owlapi.reasoner.InferenceType;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 
-import org.semanticweb.elk.owlapi.ElkReasonerFactory;  //TEMP
-import org.semanticweb.elk.owlapi.ElkReasoner;  //TEMP
 
-// import org.apache.log4j.ConsoleAppender;
 
 public class ReasonerTesting {
+	
+	/****** Class used for various testing during development; can remove it once proper JUnit testing has been implemented ********/
 
 	public ReasonerTesting() {
 		// TODO Auto-generated constructor stub
@@ -30,8 +28,8 @@ public class ReasonerTesting {
 		// Load ontology.
 		OWLOntology originalOnt = ontologyManager.loadOntologyFromOntologyDocument(
 //		new File("C:/Users/wsuja/Documents/ConsultingEngagements/FDA/Research/SWEC-Classification/SWEC-Ontology-Example-PROPERTY-TESTING-YES-CLASSIFIED-NO-ANNOTATION.owx"));
-//		new File("C:/Users/wsuja/Documents/ConsultingEngagements/FDA/Research/SWEC-Classification/SWEC-Ontology-Example-PROPERTY-TESTING-NO-CLASSIFIED-YES-ANNOTATION.owx"));
-		new File("C:/Users/wsuja/Documents/ConsultingEngagements/FDA/Research/SWEC-Classification/SWEC-Ontology-Example-9.owx"));
+		new File("C:/Users/wsuja/Documents/ConsultingEngagements/FDA/Research/SWEC-Classification/SWEC-Ontology-Example-PROPERTY-TESTING-NO-CLASSIFIED-YES-ANNOTATION.owx"));
+//		new File("C:/Users/wsuja/Documents/ConsultingEngagements/FDA/Research/SWEC-Classification/SWEC-Ontology-Example-9.owx"));
 // DEBUG		System.out.println("THE ORIGINAL ONTOLOGY");
 // DEBUG		System.out.println(originalOnt);
 // DEBUG 		OntologyExplorer.printOntologyParsedAxioms(originalOnt);
@@ -50,7 +48,7 @@ public class ReasonerTesting {
 //ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasonerSHIELD) reasonerSHIELD, false);		
 //System.out.println();
 		System.out.println("POST-INSTANTIATION ElkReasonerSHIELD OWL TAXONOMY");
-		OntologyExplorer.printOwlTaxonomy(reasonerSHIELD.getTopClassNode(), 0, reasonerSHIELD);
+		ReasonerExplorer.printOwlTaxonomy(reasonerSHIELD.getTopClassNode(), 0, reasonerSHIELD);
 		System.out.println();
 		System.out.println("Disposing...");
 		reasonerSHIELD.dispose();

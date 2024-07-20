@@ -33,24 +33,55 @@ public class StatementClassifierSHIELD {
 	private OWLReasoner statementOwlReasoner_;
 	private SubsumptionNormalFormBuilderSHIELD subsumptionNormalFormBuilder;
 	private CustomSubsumptionTesterSHIELD subsumptionTester;
+	private String statementConceptNamespace;
+	private String statementConceptName;
+	private String temporalAnnotationOwlIRI;
+	private String owlThingIRI;
+	private String owlNothingIRI;
+
+
 
 
 		public StatementClassifierSHIELD(OWLOntology kernelOntology, OWLOntology statementOntology, OWLReasoner kernelOwlReasoner, OWLReasoner statementOwlReasoner) {
 		this.statementOntology_ = statementOntology;
 		this.kernelOwlReasoner_ = kernelOwlReasoner;
 		this.statementOwlReasoner_ = statementOwlReasoner;
+		this.statementConceptNamespace = DefaultProperties.STATEMENT_CONCEPT_NAMESPACE;
+		this.statementConceptName = DefaultProperties.STATEMENT_CONCEPT_NAME;
+		this.temporalAnnotationOwlIRI = DefaultProperties.TEMPORAL_ANNOTATION_OWL_IRI;
+		this.owlThingIRI = DefaultProperties.OWL_NOTHING_IRI;
+		this.owlNothingIRI = DefaultProperties.OWL_NOTHING_IRI;
 		subsumptionNormalFormBuilder = new SubsumptionNormalFormBuilderSHIELD(kernelOntology,
 				 																 statementOntology,
 				 																 kernelOwlReasoner,
 				 																 statementOwlReasoner);	
 		subsumptionNormalFormBuilder.init();
 		subsumptionNormalFormBuilder.generate();
-		subsumptionTester = new CustomSubsumptionTesterSHIELD(kernelOntology);
-		// METHOD WAS COMMENTED OUT IN SubsumptionNormalFormBuilderSHIELD
-		// subsumptionNormalFormBuilder.testSubsumptionsPairwise();
-
-		
+		subsumptionTester = new CustomSubsumptionTesterSHIELD(kernelOntology, this.statementConceptNamespace, this.statementConceptName, 
+															  this.temporalAnnotationOwlIRI, this.owlThingIRI, this.owlNothingIRI);
 	}
+		
+		public StatementClassifierSHIELD(OWLOntology kernelOntology, OWLOntology statementOntology, OWLReasoner kernelOwlReasoner, 
+				OWLReasoner statementOwlReasoner, String statementConceptNamespace, String statementConceptName, String temporalAnnotationOwlIRI,
+				String owlThingIRI, String OwlNothingIRI) {
+		this.statementOntology_ = statementOntology;
+		this.kernelOwlReasoner_ = kernelOwlReasoner;
+		this.statementOwlReasoner_ = statementOwlReasoner;
+		this.statementConceptNamespace = statementConceptNamespace;
+		this.statementConceptName = statementConceptName;
+		this.temporalAnnotationOwlIRI = temporalAnnotationOwlIRI;
+		this.owlThingIRI = owlThingIRI;
+		this.owlNothingIRI = owlNothingIRI;
+		subsumptionNormalFormBuilder = new SubsumptionNormalFormBuilderSHIELD(kernelOntology,
+				 																 statementOntology,
+				 																 kernelOwlReasoner,
+				 																 statementOwlReasoner);	
+		subsumptionNormalFormBuilder.init();
+		subsumptionNormalFormBuilder.generate();
+		subsumptionTester = new CustomSubsumptionTesterSHIELD(kernelOntology, this.statementConceptNamespace, this.statementConceptName, 
+				                                              this.temporalAnnotationOwlIRI, this.owlThingIRI, this.owlNothingIRI);
+	}
+
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub

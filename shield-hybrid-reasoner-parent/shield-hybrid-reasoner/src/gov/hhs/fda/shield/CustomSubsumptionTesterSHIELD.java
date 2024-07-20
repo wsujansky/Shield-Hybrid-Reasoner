@@ -31,12 +31,37 @@ public class CustomSubsumptionTesterSHIELD {
 	OWLOntology ontology_;
 	OWLOntologyManager manager_;
     TemporalExpressionSubsumptionTester temporalSubsumptionTester;
+	private String statementConceptNamespace;
+	private String statementConceptName;
+	private String temporalAnnotationOwlIRI;
+	private String owlThingIRI;
+	private String owlNothingIRI;
+
+
 
 	public CustomSubsumptionTesterSHIELD(OWLOntology ontology) {
 		this.ontology_ = ontology; 
 		this.manager_ = ontology.getOWLOntologyManager();
-        this.temporalSubsumptionTester = new TemporalExpressionSubsumptionTester();
+		this.statementConceptNamespace = DefaultProperties.STATEMENT_CONCEPT_NAMESPACE;
+		this.statementConceptName = DefaultProperties.STATEMENT_CONCEPT_NAME;
+		this.temporalAnnotationOwlIRI = DefaultProperties.TEMPORAL_ANNOTATION_OWL_IRI;
+		this.owlThingIRI = DefaultProperties.OWL_NOTHING_IRI;
+		this.owlNothingIRI = DefaultProperties.OWL_NOTHING_IRI;
+        this.temporalSubsumptionTester = new TemporalExpressionSubsumptionTester(this.temporalAnnotationOwlIRI);
 	}
+	
+	public CustomSubsumptionTesterSHIELD(OWLOntology ontology, String statementConceptNamespace, String statementConceptName, String temporalAnnotationOwlIRI,
+			                             String owlThingIRI, String OwlNothingIRI) {
+		this.ontology_ = ontology; 
+		this.manager_ = ontology.getOWLOntologyManager();
+		this.statementConceptNamespace = statementConceptNamespace;
+		this.statementConceptName = statementConceptName;
+		this.temporalAnnotationOwlIRI = temporalAnnotationOwlIRI;
+		this.owlThingIRI = owlThingIRI;
+		this.owlNothingIRI = owlNothingIRI;
+        this.temporalSubsumptionTester = new TemporalExpressionSubsumptionTester(this.temporalAnnotationOwlIRI);
+	}
+
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
@@ -46,8 +71,10 @@ public class CustomSubsumptionTesterSHIELD {
 		ElkClass subNodeClassExpression = subNode.getMembers().iterator().next();
 		ElkClass superNodeClassExpression = superNode.getMembers().iterator().next();
 		// TODO:  ?? Maybe iterate through all members, in case there is more than one per node?
-		if (superNodeClassExpression.getIri().toString().equals("http://www.w3.org/2002/07/owl#Thing") ||
-	        subNodeClassExpression.getIri().toString().equals("http://www.w3.org/2002/07/owl#Nothing")) {
+//		if (superNodeClassExpression.getIri().toString().equals("http://www.w3.org/2002/07/owl#Thing") ||
+//	        subNodeClassExpression.getIri().toString().equals("http://www.w3.org/2002/07/owl#Nothing")) {
+		if (superNodeClassExpression.getIri().toString().equals(owlThingIRI) ||
+		        subNodeClassExpression.getIri().toString().equals(owlNothingIRI)) {
 				return true;
 		}
 		else
@@ -180,7 +207,8 @@ public class CustomSubsumptionTesterSHIELD {
 	    Collection<OWLAnnotation> annotations = EntitySearcher.getAnnotations(owlProperty, ontology_);
 	    for (Iterator<OWLAnnotation> iterator = annotations.iterator(); iterator.hasNext();) {
 	    	OWLAnnotation owlAnnotation = (OWLAnnotation) iterator.next();
-	    	if (owlAnnotation.getProperty().getIRI().toString().equals("http://www.w3.org/2000/01/rdf-schema#isDefinedBy")) 
+//	    	if (owlAnnotation.getProperty().getIRI().toString().equals("http://www.w3.org/2000/01/rdf-schema#isDefinedBy")) 
+	    	if (owlAnnotation.getProperty().getIRI().toString().equals(this.temporalAnnotationOwlIRI)) 
 	    		return true; 
 	    	}
 		return false;
@@ -191,7 +219,8 @@ public class CustomSubsumptionTesterSHIELD {
 	    Collection<OWLAnnotation> annotations = EntitySearcher.getAnnotations(propertyExpression, ontology_);
 	    for (Iterator<OWLAnnotation> iterator = annotations.iterator(); iterator.hasNext();) {
 	    	OWLAnnotation owlAnnotation = (OWLAnnotation) iterator.next();
-	    	if (owlAnnotation.getProperty().getIRI().toString().equals("http://www.w3.org/2000/01/rdf-schema#isDefinedBy")) {
+//	    	if (owlAnnotation.getProperty().getIRI().toString().equals("http://www.w3.org/2000/01/rdf-schema#isDefinedBy")) {
+	    	if (owlAnnotation.getProperty().getIRI().toString().equals(this.temporalAnnotationOwlIRI)) {
 	    		String quotedValue = owlAnnotation.getValue().toString();
 	    		return quotedValue.substring(1, quotedValue.length() - 1); // remove beginning/ending double quotes
 	    	}
@@ -216,7 +245,7 @@ public class CustomSubsumptionTesterSHIELD {
 
 	//For testing only
 	public boolean classExpressionIsSubsumedBy(String subClassName, String superClassName, OWLOntology ontology, OWLReasoner kernelReasoner, OWLReasoner classifiedReasoner) {
-		IRI ontologyIRI = IRI.create("http://www.hhs.fda.org/shield/SWEC-Ontology#");
+		IRI ontologyIRI = IRI.create(statementConceptNamespace + "#");
 		OWLDataFactory factory = ontology.getOWLOntologyManager().getOWLDataFactory();
 		OWLClass subClass = factory.getOWLClass(IRI.create(ontologyIRI + subClassName));
 		OWLClass superClass = factory.getOWLClass(IRI.create(ontologyIRI + superClassName));
@@ -261,12 +290,6 @@ public class CustomSubsumptionTesterSHIELD {
 		return owlClass;  //TEMP placeholder; return the 2nd OWLClassExpression in owlAxiom, unless it's an exception
 	}
 
-/*
-	public OWLClass buildOWLClassSWEC(String ClassName, OWLOntologyManager ontologyManager) {
-		IRI ontologyIRI = IRI.create("http://www.hhs.fda.org/shield/SWEC-Ontology#");
-		return ontologyManager.getOWLDataFactory().getOWLClass(IRI.create(ontologyIRI + ClassName));
-	}
-*/
 	
 	private boolean pattern(OWLClassExpression subNodeClassExpression, OWLClassExpression superNodeClassExpression, Pattern targetPattern) {
 		Pattern thisPattern = Pattern.NOTHANDLEDPATTERN;

@@ -26,9 +26,10 @@
 		<owlapi.version>4.1.3</owlapi.version>
 		<protege.version>5.5.0</protege.version>   <!-- THIS WORKED FOR SURE WITH PROTEGE 5.6.3 -->
 <!--		<protege.version>5.6.4</protege.version>  NEEDED TO RUN IN DEBUGGER WITH PROTEGE 5.6.4 -->
+		<java.version>11</java.version>
 		<elk.version>0.4.3</elk.version>
 
-		<java.version>11</java.version>
+		
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

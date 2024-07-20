@@ -9,9 +9,11 @@ import org.semanticweb.elk.owlapi.ElkReasonerConfiguration;
 import org.semanticweb.elk.owlapi.OwlOntologyLoader;
 import org.semanticweb.elk.reasoner.ReasonerFactory;
 import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassAxiom;
+import org.semanticweb.owlapi.model.OWLDataFactory;
 import org.semanticweb.owlapi.model.OWLDeclarationAxiom;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
@@ -38,16 +40,25 @@ public class ElkReasonerSHIELD extends ElkReasoner {
 	@SuppressWarnings("unused")
 	private OWLReasonerConfiguration owlReasonerConfig_;  
 	private StatementClassifierSHIELD classifier; 
+	private String statementConceptNamespace;
+	private String statementConceptName;
+	private String temporalAnnotationOwlIRI;
+	private String owlThingIRI;
+	private String owlNothingIRI;
 
+	// Main class for testing only
 	public static void main(String[] args)  {
+		System.out.println(DefaultProperties.STATEMENT_CONCEPT_NAMESPACE);
+		System.out.println(DefaultProperties.STATEMENT_CONCEPT_NAME);
+		
 		OWLOntologyManager ontologyManager = OWLManager.createOWLOntologyManager();
 		try {
 			OWLOntology originalOnt = ontologyManager.loadOntologyFromOntologyDocument(
 					new File("C:/Users/wsuja/Documents/ConsultingEngagements/FDA/Research/SWEC-Classification/SWEC-Ontology-Example-9.owx"));
 			ElkReasonerFactorySHIELD reasonerFactory = new ElkReasonerFactorySHIELD();
-			OWLReasoner reasonerSHIELD = reasonerFactory.createBufferingReasoner(originalOnt);  // Only buffering reasoners will be allowed
+			OWLReasoner reasonerSHIELD = reasonerFactory.createBufferingReasoner(originalOnt);  // Only buffering reasoners will be allowed;  see comment in ElkReasonerFactorySHIELD.java
 			System.out.println("POST-INSTANTIATION ElkReasonerSHIELD OWL TAXONOMY:");
-			OntologyExplorer.printOwlTaxonomy(reasonerSHIELD.getTopClassNode(), 0, reasonerSHIELD);
+			ReasonerExplorer.printOwlTaxonomy(reasonerSHIELD.getTopClassNode(), 0, reasonerSHIELD);
 			System.out.println();
 			System.out.println("Disposing...");
 			reasonerSHIELD.dispose();
@@ -57,11 +68,19 @@ public class ElkReasonerSHIELD extends ElkReasoner {
 			}
 		}
 	
-	// Create super class ElkReasoner, which classifies the input ontology using standard EL++ classification
+	// Constructor creates super class ElkReasoner, which classifies the input ontology using standard EL++ classification, and
+	// then calls the preComputeInferences() and/or recreateReasoner() methods below, which invoke the hybrid reasoner on all
+	// concepts rooted at "Statement-Concept" in the input ontology
 	public ElkReasonerSHIELD (OWLOntology loadedOntology, boolean isBufferingMode, OWLReasonerConfiguration config) throws IllegalConfigurationException {                        
 		super(loadedOntology, isBufferingMode, convertToElkConfig(config));
 		this.isBufferingMode_ = isBufferingMode;
 		this.owlReasonerConfig_ = config;  
+		this.statementConceptNamespace = DefaultProperties.STATEMENT_CONCEPT_NAMESPACE;
+		this.statementConceptName = DefaultProperties.STATEMENT_CONCEPT_NAME;
+		this.temporalAnnotationOwlIRI = DefaultProperties.TEMPORAL_ANNOTATION_OWL_IRI;
+		this.owlThingIRI = DefaultProperties.OWL_THING_IRI;
+		this.owlNothingIRI = DefaultProperties.OWL_NOTHING_IRI;
+		
 //DEBUG System.out.println("REASONER: Completed creation of ElkReasoner super class");	
 	}	
 	
@@ -70,12 +89,13 @@ public class ElkReasonerSHIELD extends ElkReasoner {
 	// sourceOntology and put them in the destination ontology; these classes will get reclassified
 	// using the hybrid reasoner logic.  It is assumed that the sub-hierarchy rooted at targetClassName includes
 	// no concepts that are referenced by the remainder of the ontology
-	public synchronized void moveStatementAxioms(String targetClassName, OWLOntology sourceOntology, OWLOntology destinationOntology, Boolean removeFromSourceOntology, OntologyType ontologyToReturn) {
+	public synchronized void moveStatementAxioms(String targetClassNamespace, String targetClassName, OWLOntology sourceOntology, OWLOntology destinationOntology, Boolean removeFromSourceOntology, OntologyType ontologyToReturn) {
 		OWLOntologyManager ontologyManager = destinationOntology.getOWLOntologyManager();  // Very important that it's OWLOntologyManager from *desintationOntology*, not sourceOntology
 		StructuralReasonerFactory structuralReasonerFactory = new StructuralReasonerFactory();
 		// Structural reasoner creates *stated* hierarchy for the input ontology; used to identify all sub-classes
 		OWLReasoner structuralReasoner = structuralReasonerFactory.createNonBufferingReasoner(sourceOntology);
-		Set<OWLClass> subClassSet = ReasonerExplorer.buildSubClassSet(targetClassName, sourceOntology, structuralReasoner, true); // ORIG
+//		Set<OWLClass> subClassSet = ReasonerExplorer.buildSubClassSet(targetClassName, sourceOntology, structuralReasoner, true); // ORIG
+		Set<OWLClass> subClassSet = buildSubClassSet(targetClassNamespace, targetClassName, sourceOntology, structuralReasoner, true);
 		for (OWLClass owlClass : subClassSet) {  //NEW
 			Set<OWLClassAxiom> defnAxioms = sourceOntology.getAxioms(owlClass,Imports.INCLUDED);		
 				for (Iterator<OWLClassAxiom> iterator = defnAxioms.iterator(); iterator.hasNext();) {  
@@ -144,23 +164,15 @@ public class ElkReasonerSHIELD extends ElkReasoner {
 		// into the statementOntology.  The resulting loadedOntology is assigned the name kernelOntology.  It will
 		// ultimately also contain the correctly classified statement concepts.  Initially, it only
 		// contains kernel concepts.
- 		moveStatementAxioms("Statement-Concept", owlOntology_, statementOntology, false, OntologyType.SOURCE);
+ 		moveStatementAxioms(this.statementConceptNamespace, this.statementConceptName, owlOntology_, statementOntology, false, OntologyType.SOURCE);
 
- // DEBUG System.out.println("REASONER IN preComputeHierarchy: Completed moving of axioms from loaded to statement ontology");	
+// DEBUG System.out.println("REASONER IN preComputeHierarchy: Completed moving of axioms from original to statement ontology");	
  		
-		// The kernel ontology is loaded into and classified by a standard ElkReasoner.  This classification
-		// of all kernel concepts is needed for the subsequent classification of the statement concepts
-		// within the kernel reasoner's taxonomy (because statement concepts are defined with respect to
-		// kernel concepts)
-		// NOT NEEDED ElkReasonerFactory elkReasonerFactory = new ElkReasonerFactory(); 
-		// NOT NEEDED ElkReasoner kernelElkReasoner = (ElkReasoner) elkReasonerFactory.createElkReasoner(this.owlOntology_,
-		//		                                                                           isBufferingMode, 
-		//		                                                                           config);	
 //DEBUG System.out.println("ORIGINAL KERNEL REASONER TAXONOMY - IN preComputeHierarchy");
 //DEBUG ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) this, false);
 
-//DEBUG System.out.println("ORIGINAL STATEMENT ONTOLOGY - IN reCreateReasoner: ");
-//DEBUG System.out.println(statementOntology); 
+System.out.println("ORIGINAL STATEMENT ONTOLOGY - IN reCreateReasoner: ");
+System.out.println(statementOntology); 
 
 //DEBUG System.out.println("ORIGINAL KERNEL REASONER TAXONOMY - IN reCreateReasoner");
 //DEBUG ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) kernelElkReasoner, false);
@@ -177,7 +189,9 @@ public class ElkReasonerSHIELD extends ElkReasoner {
 		// Instantiation of a StatementClassifierSHIELD classifier creates subsumption-normal-form 
 		// representations of each statement in the statementOntology.  These representations are 
 		// needed by the subsequent classifyStatementConcepts operation.
-		this.classifier = new StatementClassifierSHIELD(this.owlOntology_, statementOntology, this, statementOwlReasoner);
+		this.classifier = new StatementClassifierSHIELD(this.owlOntology_, statementOntology, this, statementOwlReasoner,
+				                                        DefaultProperties.STATEMENT_CONCEPT_NAMESPACE, DefaultProperties.STATEMENT_CONCEPT_NAME,
+				                                        DefaultProperties.TEMPORAL_ANNOTATION_OWL_IRI, DefaultProperties.OWL_THING_IRI, DefaultProperties.OWL_NOTHING_IRI);
 		classifier.classifyStatementConcepts(this.owlOntology_, statementOntology, this, statementOwlReasoner);
 		
 		// After all statements have been classified within the taxonomy of the kernelReasoner, we set
@@ -205,7 +219,7 @@ public class ElkReasonerSHIELD extends ElkReasoner {
 		// into the statementOntology.  The resulting loadedOntology is assigned the name kernelOntology.  It will
 		// ultimately also contain the correctly classified statement concepts.  Initially, it only
 		// contains kernel concepts.
- 		moveStatementAxioms("Statement-Concept", owlOntology_, statementOntology, false, OntologyType.SOURCE);
+ 		moveStatementAxioms(DefaultProperties.STATEMENT_CONCEPT_NAMESPACE, DefaultProperties.STATEMENT_CONCEPT_NAME, owlOntology_, statementOntology, false, OntologyType.SOURCE);
 //DEBUG System.out.println("REASONER: Completed moving of axioms from loaded to statement ontology");	
  		
 		// The kernel ontology is loaded into and classified by a standard ElkReasoner.  This classification
@@ -215,8 +229,8 @@ public class ElkReasonerSHIELD extends ElkReasoner {
 //DEBUG System.out.println("ORIGINAL KERNEL REASONER TAXONOMY - IN reCreateReasoner");
 //DEBUG ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) this, false);
 
-//DEBUG System.out.println("ORIGINAL STATEMENT ONTOLOGY - IN reCreateReasoner: ");
-//DEBUG System.out.println(statementOntology); 
+System.out.println("ORIGINAL STATEMENT ONTOLOGY - IN reCreateReasoner: ");
+System.out.println(statementOntology); 
 
 //DEBUG System.out.println("ORIGINAL KERNEL REASONER TAXONOMY - IN reCreateReasoner");
 //DEBUG ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) kernelElkReasoner, false);
@@ -233,7 +247,9 @@ public class ElkReasonerSHIELD extends ElkReasoner {
 		// Instantiation of a StatementClassifierSHIELD classifier creates subsumption-normal-form 
 		// representations of each statement in the statementOntology.  These representations are 
 		// needed by the subsequent classifyStatementConcepts operation.
-		this.classifier = new StatementClassifierSHIELD(this.owlOntology_, statementOntology, this, statementOwlReasoner);
+		this.classifier = new StatementClassifierSHIELD(this.owlOntology_, statementOntology, this, statementOwlReasoner,
+                                                        DefaultProperties.STATEMENT_CONCEPT_NAMESPACE, DefaultProperties.STATEMENT_CONCEPT_NAME,
+				                                        DefaultProperties.TEMPORAL_ANNOTATION_OWL_IRI, DefaultProperties.OWL_THING_IRI, DefaultProperties.OWL_NOTHING_IRI);
 		classifier.classifyStatementConcepts(this.owlOntology_, statementOntology, this, statementOwlReasoner);
 		
 		// After all statements have been classified within the taxonomy of the kernelReasoner, we set
@@ -257,6 +273,17 @@ public class ElkReasonerSHIELD extends ElkReasoner {
 		}
 		return ontology;
 	}
+	
+	private synchronized static Set<OWLClass> buildSubClassSet(String conceptNamespace, String conceptName, OWLOntology ontology, OWLReasoner reasoner, boolean includeRootClass)  {
+		OWLDataFactory factory = ontology.getOWLOntologyManager().getOWLDataFactory();
+	    OWLClass superClass = factory.getOWLClass(
+	       IRI.create(conceptNamespace + "#" + conceptName));
+	    Set<OWLClass> subClassSet = reasoner.getSubClasses(superClass, false).getFlattened();
+	    if (includeRootClass)  {
+	        subClassSet.add(superClass);  // include the superclass concept also
+	    }
+	    return subClassSet;
+		}
 
 	static ElkReasonerConfiguration convertToElkConfig(OWLReasonerConfiguration owlConfig) {
 //DEBUG System.out.println("OWLReasonerConfiguration: " + owlConfig);

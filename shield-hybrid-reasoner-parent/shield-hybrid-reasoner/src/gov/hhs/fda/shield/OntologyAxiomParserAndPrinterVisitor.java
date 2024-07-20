@@ -22,7 +22,8 @@ public class OntologyAxiomParserAndPrinterVisitor extends OWLObjectVisitorAdapte
 	public OntologyAxiomParserAndPrinterVisitor() {
 		// TODO Auto-generated constructor stub
 	}
-	
+
+/**
 	int incrementLevel = 0;
 	int indentSize = 2;
 	
@@ -109,5 +110,6 @@ public class OntologyAxiomParserAndPrinterVisitor extends OWLObjectVisitorAdapte
     	printlnWithIndent("CLASS PROPERTY: " + property.getIRI(), incrementLevel);
         decrementLevel();  // un-indent nesting
     }
-    
+**/
+	
 }

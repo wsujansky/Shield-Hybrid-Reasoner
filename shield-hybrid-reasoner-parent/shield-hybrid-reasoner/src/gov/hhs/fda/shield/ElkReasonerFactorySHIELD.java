@@ -27,11 +27,14 @@ public class ElkReasonerFactorySHIELD implements OWLReasonerFactory {
 	}
 
 
+	// Allowing only Buffering reasoner, since non-buffering reasoner may cause errors when the ontology is
+	// changed while the hybrid reasoner is running;  May with to further test this, since some other changes were
+	// since made to the hybrid reasoner algorithm that may now allow a non-buffering reasoner to work without causing
+	// these errors.  This has not yet been tested.
 	@Override
 	public OWLReasoner createNonBufferingReasoner(OWLOntology ontology) throws RuntimeException {
 		if (LOGGER_.isTraceEnabled())
 			LOGGER_.trace("createNonBufferingReasoner(OWLOntology)");
-//		return createElkReasoner(ontology, false, null);
 		throw new RuntimeException("Cannot create non-buffering ElkReasonerSHIELD reasoner");
 	}
 	
@@ -54,7 +57,6 @@ public class ElkReasonerFactorySHIELD implements OWLReasonerFactory {
 			throws RuntimeException {
 		if (LOGGER_.isTraceEnabled())
 			LOGGER_.trace("createNonBufferingReasoner(OWLOntology, OWLReasonerConfiguration)");
-//		return createElkReasoner(ontology, false, config);
 		throw new RuntimeException("Cannot create non-buffering ElkReasonerSHIELD reasoner");
 	}
 
@@ -65,7 +67,6 @@ public class ElkReasonerFactorySHIELD implements OWLReasonerFactory {
 		if (LOGGER_.isTraceEnabled())
 			LOGGER_.trace("createReasoner(OWLOntology, OWLReasonerConfiguration)");
 		return createElkReasoner(ontology, true, config);
-//		return createElkReasoner(ontology, true, null);
 	}
 	
 	
@@ -79,23 +80,15 @@ public class ElkReasonerFactorySHIELD implements OWLReasonerFactory {
 		ElkReasonerSHIELD reasoner = null;  // Initialized outside try/catch so it can be returned
 		ElkReasonerConfiguration elkReasonerConfig;
 		if (config != null) {
-//DEBUG System.out.println("config != null");
 			if (config instanceof ElkReasonerConfiguration) {//
-//DEBUG System.out.println("config instanceof ElkReasonerConfiguration");
 				elkReasonerConfig = (ElkReasonerConfiguration) config;
 			} else {
-//DEBUG System.out.println("config NOT instanceof ElkReasonerConfiguration");				
 				elkReasonerConfig = new ElkReasonerConfiguration(config);
 			}
 		} else {
-//DEBUG System.out.println("config = null");
-
 			elkReasonerConfig = new ElkReasonerConfiguration();
 		}
-//DEBUG System.out.println("ELKReasonerConfiguration Num Workers: " + elkReasonerConfig.getElkConfiguration().getConfiguration().getParameter(ReasonerConfiguration.NUM_OF_WORKING_THREADS));
-
 		reasoner = new ElkReasonerSHIELD(ontology, isBufferingMode, elkReasonerConfig);
-
 		return reasoner;
 	}
 

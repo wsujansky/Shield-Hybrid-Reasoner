@@ -1,8 +1,6 @@
 package gov.hhs.fda.shield;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.semanticweb.owlapi.apibinding.OWLManager;
@@ -16,7 +14,6 @@ import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.reasoner.InferenceType;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
-import org.semanticweb.owlapi.reasoner.OWLReasonerFactory;
 
 public class ElkReasonerSHIELDOwlApiTester {
 
