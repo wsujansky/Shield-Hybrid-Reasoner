@@ -31,18 +31,21 @@ public class StatementClassifierSHIELD {
 	private OWLOntology statementOntology_;
 	private OWLReasoner kernelOwlReasoner_;
 	private OWLReasoner statementOwlReasoner_;
-	private SubsumptionNormalFormBuilderSHIELD subsumptionNormalFormBuilder;
-	private CustomSubsumptionTesterSHIELD subsumptionTester;
+
 	private String statementConceptNamespace;
 	private String statementConceptName;
 	private String temporalAnnotationOwlIRI;
 	private String owlThingIRI;
 	private String owlNothingIRI;
+	private String absenceNamespace;
+	private String absenceProperty;
+	private String absenceValue;
+	private SubsumptionNormalFormBuilderSHIELD subsumptionNormalFormBuilder;
+	private CustomSubsumptionTesterSHIELD subsumptionTester;
 
 
 
-
-		public StatementClassifierSHIELD(OWLOntology kernelOntology, OWLOntology statementOntology, OWLReasoner kernelOwlReasoner, OWLReasoner statementOwlReasoner) {
+	public StatementClassifierSHIELD(OWLOntology kernelOntology, OWLOntology statementOntology, OWLReasoner kernelOwlReasoner, OWLReasoner statementOwlReasoner) {
 		this.statementOntology_ = statementOntology;
 		this.kernelOwlReasoner_ = kernelOwlReasoner;
 		this.statementOwlReasoner_ = statementOwlReasoner;
@@ -51,19 +54,25 @@ public class StatementClassifierSHIELD {
 		this.temporalAnnotationOwlIRI = DefaultProperties.TEMPORAL_ANNOTATION_OWL_IRI;
 		this.owlThingIRI = DefaultProperties.OWL_NOTHING_IRI;
 		this.owlNothingIRI = DefaultProperties.OWL_NOTHING_IRI;
+		this.absenceNamespace = DefaultProperties.ABSENCE_NAMESPACE;
+		this.absenceProperty = DefaultProperties.ABSENCE_PROPERTY;
+		this.absenceValue = DefaultProperties.ABSENCE_VALUE;
 		subsumptionNormalFormBuilder = new SubsumptionNormalFormBuilderSHIELD(kernelOntology,
 				 																 statementOntology,
 				 																 kernelOwlReasoner,
-				 																 statementOwlReasoner);	
+				 																 statementOwlReasoner,
+				 																 this.absenceNamespace,
+				 																 this.absenceProperty,
+				 																 this.absenceValue);	
 		subsumptionNormalFormBuilder.init();
 		subsumptionNormalFormBuilder.generate();
 		subsumptionTester = new CustomSubsumptionTesterSHIELD(kernelOntology, this.statementConceptNamespace, this.statementConceptName, 
 															  this.temporalAnnotationOwlIRI, this.owlThingIRI, this.owlNothingIRI);
 	}
 		
-		public StatementClassifierSHIELD(OWLOntology kernelOntology, OWLOntology statementOntology, OWLReasoner kernelOwlReasoner, 
+	public StatementClassifierSHIELD(OWLOntology kernelOntology, OWLOntology statementOntology, OWLReasoner kernelOwlReasoner, 
 				OWLReasoner statementOwlReasoner, String statementConceptNamespace, String statementConceptName, String temporalAnnotationOwlIRI,
-				String owlThingIRI, String OwlNothingIRI) {
+				String owlThingIRI, String owlNothingIRI, String absenceNamespace, String absenceProperty, String absenceValue) {
 		this.statementOntology_ = statementOntology;
 		this.kernelOwlReasoner_ = kernelOwlReasoner;
 		this.statementOwlReasoner_ = statementOwlReasoner;
@@ -72,14 +81,20 @@ public class StatementClassifierSHIELD {
 		this.temporalAnnotationOwlIRI = temporalAnnotationOwlIRI;
 		this.owlThingIRI = owlThingIRI;
 		this.owlNothingIRI = owlNothingIRI;
+		this.absenceNamespace = absenceNamespace;
+		this.absenceProperty = absenceProperty;
+		this.absenceValue = absenceValue;
 		subsumptionNormalFormBuilder = new SubsumptionNormalFormBuilderSHIELD(kernelOntology,
 				 																 statementOntology,
 				 																 kernelOwlReasoner,
-				 																 statementOwlReasoner);	
+				 																 statementOwlReasoner,
+				 																 absenceNamespace,
+				 																 absenceProperty,
+				 																 absenceValue);	
 		subsumptionNormalFormBuilder.init();
 		subsumptionNormalFormBuilder.generate();
-		subsumptionTester = new CustomSubsumptionTesterSHIELD(kernelOntology, this.statementConceptNamespace, this.statementConceptName, 
-				                                              this.temporalAnnotationOwlIRI, this.owlThingIRI, this.owlNothingIRI);
+		subsumptionTester = new CustomSubsumptionTesterSHIELD(kernelOntology, statementConceptNamespace, statementConceptName, 
+				                                              temporalAnnotationOwlIRI, owlThingIRI, owlNothingIRI);
 	}
 
 
@@ -93,17 +108,18 @@ public class StatementClassifierSHIELD {
 			ConcurrentClassTaxonomy destinationTaxonomy = (ConcurrentClassTaxonomy) kernelElkReasoner.getInternalReasoner().getTaxonomy();
 //DEBUG System.out.println("ORIGINAL KERNEL REASONER TAXONOMY - IN CLASSIFIER - BEFORE REMOVAL OF STATEMENT-CONCEPT");
 //DEBUG ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) kernelElkReasoner, false);
-			boolean removed = removeStatementHierachyFromKernelTaxonomy("Statement-Concept", statementOntology, statementOwlReasoner, destinationTaxonomy); 
+			String statementConceptIri = this.statementConceptNamespace + "#" + this.statementConceptName;
+			boolean removed = removeStatementHierachyFromKernelTaxonomy(statementConceptIri, statementOntology, statementOwlReasoner, destinationTaxonomy); 
 			if (!removed) {
 				throw new RuntimeException("Cannot remove Statement hierarchy from Kernel reasoner taxonomy; hierarchy could not be found.");
 			}
 //DEBUG System.out.println("ORIGINAL KERNEL REASONER TAXONOMY - IN CLASSIFIER - AFTER REMOVAL OF STATEMENT-CONCEPT");
 //DEBUG ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) kernelElkReasoner, false);
 
-			TaxonomyNode<ElkClass> rootKernelTaxonomyNodeForClassification = copyNamedNodeFromStatementToKernelReasoner("Statement-Concept", statementOntology, statementOwlReasoner, kernelElkReasoner);
+			TaxonomyNode<ElkClass> rootKernelTaxonomyNodeForClassification = copyNamedNodeFromStatementToKernelReasoner(statementConceptIri, statementOntology, statementOwlReasoner, kernelElkReasoner);
 //DEBUG System.out.println("ORIGINAL KERNEL REASONER TAXONOMY - IN CLASSIFIER");
 //DEBUG ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) kernelElkReasoner, false);
-			NodeSet<OWLClass> subNodes = getSubsumedNodesFromOwlReasoner("Statement-Concept", statementOwlReasoner, statementOntology);
+			NodeSet<OWLClass> subNodes = getSubsumedNodesFromOwlReasoner(statementConceptIri, statementOwlReasoner, statementOntology);
 
 // DEBUG for (Node<OWLClass> node : subNodes) {
 // DEBUG	System.out.println("****TRYING TO CLASSIFY: "+ node.getEntities().iterator().next().getIRI().toString());
@@ -136,8 +152,8 @@ public class StatementClassifierSHIELD {
 	
 	//  Note:  This method assumes that the root of the statement hierarchy is a direct child of the kernelElkReasoner taxonomy top node
 	//  TODO:  Generalize this method not to make the assumption above, but to use a breadth-first search for the root in the entire kernelElkReasoner taxonomy
-	private boolean removeStatementHierachyFromKernelTaxonomy(String targetName, OWLOntology statementOntology, OWLReasoner statementOwlReasoner, ConcurrentClassTaxonomy kernelElkReasonerTaxonomy) {
-		Node<OWLClass> targetNode = getNamedOwlClassNodeFromStatementReasoner(targetName, statementOntology, statementOwlReasoner);
+	private boolean removeStatementHierachyFromKernelTaxonomy(String targetIri, OWLOntology statementOntology, OWLReasoner statementOwlReasoner, ConcurrentClassTaxonomy kernelElkReasonerTaxonomy) {
+		Node<OWLClass> targetNode = getNamedOwlClassNodeFromStatementReasoner(targetIri, statementOntology, statementOwlReasoner);
 		TaxonomyNode<ElkClass> taxonomyTopNode = kernelElkReasonerTaxonomy.getTopNode();  
 		for (TaxonomyNode<ElkClass> childOfTaxonomyTopNode : taxonomyTopNode.getDirectSubNodes()) {  // iterate through children
 			for (ElkClass currentElkClass : childOfTaxonomyTopNode.getMembers()) { // iterate through each member of the child (an ElkClass)
@@ -282,26 +298,26 @@ public class StatementClassifierSHIELD {
 	
 	
 
-	private NodeSet<OWLClass> getSubsumedNodesFromOwlReasoner(String conceptName, OWLReasoner reasoner, OWLOntology ontology) {
+	private NodeSet<OWLClass> getSubsumedNodesFromOwlReasoner(String conceptIri, OWLReasoner reasoner, OWLOntology ontology) {
 		NodeSet<OWLClass> taxonomyNodesToReturn = null; // initialize outside try/catch block
 		OWLDataFactory factory = ontology.getOWLOntologyManager().getOWLDataFactory();
 	    OWLClass namedClass = factory.getOWLClass(
-	       IRI.create("http://www.hhs.fda.org/shield/SWEC-Ontology#" + conceptName));
+	 	   IRI.create(conceptIri));
 	    taxonomyNodesToReturn = reasoner.getSubClasses(namedClass, false);	
 		return taxonomyNodesToReturn;
 	}
 
-	private TaxonomyNode<ElkClass> copyNamedNodeFromStatementToKernelReasoner(String targetNodeName,
-			OWLOntology statementOntology, OWLReasoner statementOwlReasoner, ElkReasoner kernelElkReasoner) {
+	private TaxonomyNode<ElkClass> copyNamedNodeFromStatementToKernelReasoner(String targetNodeIri,
+					OWLOntology statementOntology, OWLReasoner statementOwlReasoner, ElkReasoner kernelElkReasoner) {
 		TaxonomyNode<ElkClass> newDestinationElkClassNode = null;
 		try {
 			// First, retrieve the OWLClass node that represents the root concept of the statement hierarchy
 			// from the statementOwlReasoner ("Statement-Concept", in the default version of the statement sub-ontology)
-			Node<OWLClass> targetNode = getNamedOwlClassNodeFromStatementReasoner(targetNodeName,
+			Node<OWLClass> targetNode = getNamedOwlClassNodeFromStatementReasoner(targetNodeIri,
 				statementOntology, statementOwlReasoner);
 			if (targetNode == null) {
-				throw new RuntimeException("Named node to move to kernelReasoner not fount in the StatementReasoner: "
-						+ "http://www.hhs.fda.org/shield/SWEC-Ontology#" + targetNodeName);
+				throw new RuntimeException("Named node to move to kernelReasoner not found in the StatementReasoner: "
+						+ targetNodeIri);
 			}
 			if (targetNode.isBottomNode()) {
 				throw new RuntimeException(
@@ -328,13 +344,13 @@ public class StatementClassifierSHIELD {
 		return newDestinationElkClassNode;
 	}
 	
-	private Node<OWLClass> getNamedOwlClassNodeFromStatementReasoner(String targetNodeName,
+	private Node<OWLClass> getNamedOwlClassNodeFromStatementReasoner(String targetNodeIri,
 			OWLOntology statementOntology, OWLReasoner statementOwlReasoner) {
 			// First, retrieve the OWLClass node that represents the root concept of the statement hierarchy
 			// from the statementOwlReasoner ("Statement-Concept", in the default version of the statement sub-ontology)
 			OWLDataFactory factory = statementOntology.getOWLOntologyManager().getOWLDataFactory();
 			OWLClass targetNamedClass = factory
-					.getOWLClass(IRI.create("http://www.hhs.fda.org/shield/SWEC-Ontology#" + targetNodeName));
+					.getOWLClass(IRI.create(targetNodeIri));
 			OWLClass topStatementReasonerClassNode = statementOwlReasoner.getTopClassNode().getEntities().iterator()
 					.next();
 			NodeSet<OWLClass> subNodes = statementOwlReasoner.getSubClasses(topStatementReasonerClassNode, false);

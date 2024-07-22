@@ -45,6 +45,9 @@ public class ElkReasonerSHIELD extends ElkReasoner {
 	private String temporalAnnotationOwlIRI;
 	private String owlThingIRI;
 	private String owlNothingIRI;
+	private String absenceNamespace;
+	private String absenceProperty;
+	private String absenceValue;
 
 	// Main class for testing only
 	public static void main(String[] args)  {
@@ -80,6 +83,9 @@ public class ElkReasonerSHIELD extends ElkReasoner {
 		this.temporalAnnotationOwlIRI = DefaultProperties.TEMPORAL_ANNOTATION_OWL_IRI;
 		this.owlThingIRI = DefaultProperties.OWL_THING_IRI;
 		this.owlNothingIRI = DefaultProperties.OWL_NOTHING_IRI;
+		this.absenceNamespace = DefaultProperties.ABSENCE_NAMESPACE;
+		this.absenceProperty = DefaultProperties.ABSENCE_PROPERTY;
+		this.absenceValue = DefaultProperties.ABSENCE_VALUE;
 		
 //DEBUG System.out.println("REASONER: Completed creation of ElkReasoner super class");	
 	}	
@@ -171,8 +177,8 @@ public class ElkReasonerSHIELD extends ElkReasoner {
 //DEBUG System.out.println("ORIGINAL KERNEL REASONER TAXONOMY - IN preComputeHierarchy");
 //DEBUG ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) this, false);
 
-System.out.println("ORIGINAL STATEMENT ONTOLOGY - IN reCreateReasoner: ");
-System.out.println(statementOntology); 
+ //DEBUG System.out.println("ORIGINAL STATEMENT ONTOLOGY - IN reCreateReasoner: ");
+ //DEBUG System.out.println(statementOntology); 
 
 //DEBUG System.out.println("ORIGINAL KERNEL REASONER TAXONOMY - IN reCreateReasoner");
 //DEBUG ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) kernelElkReasoner, false);
@@ -191,7 +197,8 @@ System.out.println(statementOntology);
 		// needed by the subsequent classifyStatementConcepts operation.
 		this.classifier = new StatementClassifierSHIELD(this.owlOntology_, statementOntology, this, statementOwlReasoner,
 				                                        DefaultProperties.STATEMENT_CONCEPT_NAMESPACE, DefaultProperties.STATEMENT_CONCEPT_NAME,
-				                                        DefaultProperties.TEMPORAL_ANNOTATION_OWL_IRI, DefaultProperties.OWL_THING_IRI, DefaultProperties.OWL_NOTHING_IRI);
+				                                        DefaultProperties.TEMPORAL_ANNOTATION_OWL_IRI, DefaultProperties.OWL_THING_IRI, DefaultProperties.OWL_NOTHING_IRI,
+				                                        DefaultProperties.ABSENCE_NAMESPACE, DefaultProperties.ABSENCE_PROPERTY, DefaultProperties.ABSENCE_VALUE);
 		classifier.classifyStatementConcepts(this.owlOntology_, statementOntology, this, statementOwlReasoner);
 		
 		// After all statements have been classified within the taxonomy of the kernelReasoner, we set
@@ -249,7 +256,8 @@ System.out.println(statementOntology);
 		// needed by the subsequent classifyStatementConcepts operation.
 		this.classifier = new StatementClassifierSHIELD(this.owlOntology_, statementOntology, this, statementOwlReasoner,
                                                         DefaultProperties.STATEMENT_CONCEPT_NAMESPACE, DefaultProperties.STATEMENT_CONCEPT_NAME,
-				                                        DefaultProperties.TEMPORAL_ANNOTATION_OWL_IRI, DefaultProperties.OWL_THING_IRI, DefaultProperties.OWL_NOTHING_IRI);
+				                                        DefaultProperties.TEMPORAL_ANNOTATION_OWL_IRI, DefaultProperties.OWL_THING_IRI, DefaultProperties.OWL_NOTHING_IRI,
+				                                        DefaultProperties.ABSENCE_NAMESPACE, DefaultProperties.ABSENCE_PROPERTY, DefaultProperties.ABSENCE_VALUE);
 		classifier.classifyStatementConcepts(this.owlOntology_, statementOntology, this, statementOwlReasoner);
 		
 		// After all statements have been classified within the taxonomy of the kernelReasoner, we set
