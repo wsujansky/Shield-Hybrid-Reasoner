@@ -31,12 +31,9 @@ public class StatementClassifierSHIELD {
 	private OWLOntology statementOntology_;
 	private OWLReasoner kernelOwlReasoner_;
 	private OWLReasoner statementOwlReasoner_;
-
 	private String statementConceptNamespace;
 	private String statementConceptName;
 	private String temporalAnnotationOwlIRI;
-//	private String owlThingIRI;
-//	private String owlNothingIRI;
 	private String absenceNamespace;
 	private String absenceProperty;
 	private String absenceValue;
@@ -52,8 +49,6 @@ public class StatementClassifierSHIELD {
 		this.statementConceptNamespace = DefaultProperties.STATEMENT_CONCEPT_NAMESPACE;
 		this.statementConceptName = DefaultProperties.STATEMENT_CONCEPT_NAME;
 		this.temporalAnnotationOwlIRI = DefaultProperties.TEMPORAL_ANNOTATION_OWL_IRI;
-//		this.owlThingIRI = DefaultProperties.OWL_NOTHING_IRI;
-//		this.owlNothingIRI = DefaultProperties.OWL_NOTHING_IRI;
 		this.absenceNamespace = DefaultProperties.ABSENCE_NAMESPACE;
 		this.absenceProperty = DefaultProperties.ABSENCE_PROPERTY;
 		this.absenceValue = DefaultProperties.ABSENCE_VALUE;
@@ -69,9 +64,6 @@ public class StatementClassifierSHIELD {
 		subsumptionTester = new CustomSubsumptionTesterSHIELD(kernelOntology, this.temporalAnnotationOwlIRI);
 	}
 		
-//	public StatementClassifierSHIELD(OWLOntology kernelOntology, OWLOntology statementOntology, OWLReasoner kernelOwlReasoner, 
-//				OWLReasoner statementOwlReasoner, String statementConceptNamespace, String statementConceptName, String temporalAnnotationOwlIRI,
-//				String owlThingIRI, String owlNothingIRI, String absenceNamespace, String absenceProperty, String absenceValue) {
 	public StatementClassifierSHIELD(OWLOntology kernelOntology, OWLOntology statementOntology, OWLReasoner kernelOwlReasoner, 
 									OWLReasoner statementOwlReasoner, String statementConceptNamespace, String statementConceptName, String temporalAnnotationOwlIRI,
 									String absenceNamespace, String absenceProperty, String absenceValue) {

@@ -5,16 +5,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.semanticweb.elk.owl.interfaces.ElkClass;
-import org.semanticweb.elk.owlapi.ElkConverter;
-import org.semanticweb.elk.reasoner.taxonomy.model.TaxonomyNode;
-import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLAnnotation;
-import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
-import org.semanticweb.owlapi.model.OWLDataFactory;
-import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom;
 import org.semanticweb.owlapi.model.OWLObjectIntersectionOf;
 import org.semanticweb.owlapi.model.OWLObjectProperty;
 import org.semanticweb.owlapi.model.OWLObjectPropertyAxiom;
@@ -31,35 +24,21 @@ public class CustomSubsumptionTesterSHIELD {
 	OWLOntology ontology_;
 	OWLOntologyManager manager_;
     TemporalExpressionSubsumptionTester temporalSubsumptionTester;
-//	private String statementConceptNamespace;
-//	private String statementConceptName;
 	private String temporalAnnotationOwlIRI;
-//	private String owlThingIRI;
-//	private String owlNothingIRI;
 
 
 
 	public CustomSubsumptionTesterSHIELD(OWLOntology ontology) {
 		this.ontology_ = ontology; 
 		this.manager_ = ontology.getOWLOntologyManager();
-//		this.statementConceptNamespace = DefaultProperties.STATEMENT_CONCEPT_NAMESPACE;
-//		this.statementConceptName = DefaultProperties.STATEMENT_CONCEPT_NAME;
 		this.temporalAnnotationOwlIRI = DefaultProperties.TEMPORAL_ANNOTATION_OWL_IRI;
-//		this.owlThingIRI = DefaultProperties.OWL_NOTHING_IRI;
-//		this.owlNothingIRI = DefaultProperties.OWL_NOTHING_IRI;
         this.temporalSubsumptionTester = new TemporalExpressionSubsumptionTester();
 	}
 	
-//	public CustomSubsumptionTesterSHIELD(OWLOntology ontology, String statementConceptNamespace, String statementConceptName, String temporalAnnotationOwlIRI,
-//			                             String owlThingIRI, String OwlNothingIRI) {
 	public CustomSubsumptionTesterSHIELD(OWLOntology ontology, String temporalAnnotationOwlIRI) {
 		this.ontology_ = ontology; 
 		this.manager_ = ontology.getOWLOntologyManager();
-//		this.statementConceptNamespace = statementConceptNamespace;
-//		this.statementConceptName = statementConceptName;
 		this.temporalAnnotationOwlIRI = temporalAnnotationOwlIRI;
-//		this.owlThingIRI = owlThingIRI;
-//		this.owlNothingIRI = owlNothingIRI;
         this.temporalSubsumptionTester = new TemporalExpressionSubsumptionTester();
 	}
 

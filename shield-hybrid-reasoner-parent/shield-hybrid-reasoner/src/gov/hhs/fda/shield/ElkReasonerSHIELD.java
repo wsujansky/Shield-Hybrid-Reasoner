@@ -43,8 +43,6 @@ public class ElkReasonerSHIELD extends ElkReasoner {
 	private String statementConceptNamespace;
 	private String statementConceptName;
 	private String temporalAnnotationOwlIRI;
-	private String owlThingIRI;
-	private String owlNothingIRI;
 	private String absenceNamespace;
 	private String absenceProperty;
 	private String absenceValue;
@@ -81,8 +79,6 @@ public class ElkReasonerSHIELD extends ElkReasoner {
 		this.statementConceptNamespace = DefaultProperties.STATEMENT_CONCEPT_NAMESPACE;
 		this.statementConceptName = DefaultProperties.STATEMENT_CONCEPT_NAME;
 		this.temporalAnnotationOwlIRI = DefaultProperties.TEMPORAL_ANNOTATION_OWL_IRI;
-//		this.owlThingIRI = DefaultProperties.OWL_THING_IRI;
-//		this.owlNothingIRI = DefaultProperties.OWL_NOTHING_IRI;
 		this.absenceNamespace = DefaultProperties.ABSENCE_NAMESPACE;
 		this.absenceProperty = DefaultProperties.ABSENCE_PROPERTY;
 		this.absenceValue = DefaultProperties.ABSENCE_VALUE;
