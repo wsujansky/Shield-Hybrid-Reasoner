@@ -47,7 +47,7 @@ public class CustomSubsumptionTesterSHIELD {
 		this.temporalAnnotationOwlIRI = DefaultProperties.TEMPORAL_ANNOTATION_OWL_IRI;
 		this.owlThingIRI = DefaultProperties.OWL_NOTHING_IRI;
 		this.owlNothingIRI = DefaultProperties.OWL_NOTHING_IRI;
-        this.temporalSubsumptionTester = new TemporalExpressionSubsumptionTester(this.temporalAnnotationOwlIRI);
+        this.temporalSubsumptionTester = new TemporalExpressionSubsumptionTester();
 	}
 	
 	public CustomSubsumptionTesterSHIELD(OWLOntology ontology, String statementConceptNamespace, String statementConceptName, String temporalAnnotationOwlIRI,
@@ -59,7 +59,7 @@ public class CustomSubsumptionTesterSHIELD {
 		this.temporalAnnotationOwlIRI = temporalAnnotationOwlIRI;
 		this.owlThingIRI = owlThingIRI;
 		this.owlNothingIRI = owlNothingIRI;
-        this.temporalSubsumptionTester = new TemporalExpressionSubsumptionTester(this.temporalAnnotationOwlIRI);
+        this.temporalSubsumptionTester = new TemporalExpressionSubsumptionTester();
 	}
 
 
@@ -67,12 +67,11 @@ public class CustomSubsumptionTesterSHIELD {
 		// TODO Auto-generated method stub
 	}
 	
+/**	NOT USED, I THINK
 	public boolean TaxonomyNodeIsSubsumedBy(TaxonomyNode<ElkClass> subNode, TaxonomyNode<ElkClass> superNode, OWLOntology statementOnt, OWLReasoner kernelReasoner) {
 		ElkClass subNodeClassExpression = subNode.getMembers().iterator().next();
 		ElkClass superNodeClassExpression = superNode.getMembers().iterator().next();
 		// TODO:  ?? Maybe iterate through all members, in case there is more than one per node?
-//		if (superNodeClassExpression.getIri().toString().equals("http://www.w3.org/2002/07/owl#Thing") ||
-//	        subNodeClassExpression.getIri().toString().equals("http://www.w3.org/2002/07/owl#Nothing")) {
 		if (superNodeClassExpression.getIri().toString().equals(owlThingIRI) ||
 		        subNodeClassExpression.getIri().toString().equals(owlNothingIRI)) {
 				return true;
@@ -83,6 +82,26 @@ public class CustomSubsumptionTesterSHIELD {
 		OWLClassExpression superNodeClassDefinitionExpression = getNormalizedAxiomDefinition(superNodeClassExpression, statementOnt);
 		return classExpressionIsSubsumedBy(subNodeClassDefinitionExpression, superNodeClassDefinitionExpression, kernelReasoner);
 		}
+	}
+**/
+	
+	
+	public boolean isSubsumedBy(OWLClassExpression subNodeClassExpression, OWLClassExpression superNodeClassExpression, OWLReasoner owlReasoner) {
+		if (pattern(subNodeClassExpression, superNodeClassExpression, Pattern.BOTH_OWLCLASS)) {
+			return isSubsumedBy((OWLClass) subNodeClassExpression, (OWLClass) superNodeClassExpression, owlReasoner);
+		}
+		else if (pattern(subNodeClassExpression, superNodeClassExpression, Pattern.BOTH_OWLOBJECTSOMEVALUES)) {
+			return isSubsumedBy((OWLObjectSomeValuesFrom) subNodeClassExpression, (OWLObjectSomeValuesFrom) superNodeClassExpression, owlReasoner);
+		}
+		else if (pattern(subNodeClassExpression, superNodeClassExpression, Pattern.BOTH_OWLPROPERTY)) {
+			return isSubsumedBy((OWLObjectProperty) subNodeClassExpression, (OWLObjectProperty) superNodeClassExpression);
+		}
+		else if (pattern(subNodeClassExpression, superNodeClassExpression, Pattern.BOTH_OWLOBJECTINTERSECTION)) {
+			return isSubsumedBy((OWLObjectIntersectionOf) subNodeClassExpression, (OWLObjectIntersectionOf) superNodeClassExpression, owlReasoner);
+		}
+		else
+		return false;  // Default if the pair of expression types aren't handled above 
+					   // (i.e., the OWLClassExpression types can't be compared or are unrecognized)
 	}
 	
 	public boolean isSubsumedBy(OWLObjectIntersectionOf subNodeClassExpression, OWLObjectIntersectionOf superNodeClassExpression, OWLReasoner owlReasoner) {
@@ -146,25 +165,9 @@ public class CustomSubsumptionTesterSHIELD {
 		return false;  
 	}
 	
-	public boolean isSubsumedBy(OWLClassExpression subNodeClassExpression, OWLClassExpression superNodeClassExpression, OWLReasoner owlReasoner) {
-		if (pattern(subNodeClassExpression, superNodeClassExpression, Pattern.BOTH_OWLCLASS)) {
-			return isSubsumedBy((OWLClass) subNodeClassExpression, (OWLClass) superNodeClassExpression, owlReasoner);
-		}
-		else if (pattern(subNodeClassExpression, superNodeClassExpression, Pattern.BOTH_OWLOBJECTSOMEVALUES)) {
-			return isSubsumedBy((OWLObjectSomeValuesFrom) subNodeClassExpression, (OWLObjectSomeValuesFrom) superNodeClassExpression, owlReasoner);
-		}
-		else if (pattern(subNodeClassExpression, superNodeClassExpression, Pattern.BOTH_OWLPROPERTY)) {
-			return isSubsumedBy((OWLObjectProperty) subNodeClassExpression, (OWLObjectProperty) superNodeClassExpression);
-		}
-		else if (pattern(subNodeClassExpression, superNodeClassExpression, Pattern.BOTH_OWLOBJECTINTERSECTION)) {
-			return isSubsumedBy((OWLObjectIntersectionOf) subNodeClassExpression, (OWLObjectIntersectionOf) superNodeClassExpression, owlReasoner);
-		}
-		else
-		return false;  // Default if the pair of expression types aren't handled above 
-					   // (i.e., the OWLClassExpression types can't be compared or are unrecognized)
-	}
+
 	
-	// Reverses subsumption logic if both expressions are negated ("absent")
+	// Reverses subsumption logic if both expressions are negated ("absent"); otherwise, standard logic applies.
 	public boolean isSubsumedBy(SubsumptionNormalFormSHIELD subSNF, SubsumptionNormalFormSHIELD superSNF, OWLReasoner kernelReasoner, OWLReasoner statementReasoner) {
 		if (subSNF.isAbsent() && superSNF.isAbsent()) 
 			return isSubsumedByInternal(superSNF, subSNF, kernelReasoner, statementReasoner);
@@ -207,7 +210,6 @@ public class CustomSubsumptionTesterSHIELD {
 	    Collection<OWLAnnotation> annotations = EntitySearcher.getAnnotations(owlProperty, ontology_);
 	    for (Iterator<OWLAnnotation> iterator = annotations.iterator(); iterator.hasNext();) {
 	    	OWLAnnotation owlAnnotation = (OWLAnnotation) iterator.next();
-//	    	if (owlAnnotation.getProperty().getIRI().toString().equals("http://www.w3.org/2000/01/rdf-schema#isDefinedBy")) 
 	    	if (owlAnnotation.getProperty().getIRI().toString().equals(this.temporalAnnotationOwlIRI)) 
 	    		return true; 
 	    	}
@@ -219,7 +221,6 @@ public class CustomSubsumptionTesterSHIELD {
 	    Collection<OWLAnnotation> annotations = EntitySearcher.getAnnotations(propertyExpression, ontology_);
 	    for (Iterator<OWLAnnotation> iterator = annotations.iterator(); iterator.hasNext();) {
 	    	OWLAnnotation owlAnnotation = (OWLAnnotation) iterator.next();
-//	    	if (owlAnnotation.getProperty().getIRI().toString().equals("http://www.w3.org/2000/01/rdf-schema#isDefinedBy")) {
 	    	if (owlAnnotation.getProperty().getIRI().toString().equals(this.temporalAnnotationOwlIRI)) {
 	    		String quotedValue = owlAnnotation.getValue().toString();
 	    		return quotedValue.substring(1, quotedValue.length() - 1); // remove beginning/ending double quotes
@@ -244,6 +245,7 @@ public class CustomSubsumptionTesterSHIELD {
 
 
 	//For testing only
+/** NOT USED, I THINK
 	public boolean classExpressionIsSubsumedBy(String subClassName, String superClassName, OWLOntology ontology, OWLReasoner kernelReasoner, OWLReasoner classifiedReasoner) {
 		IRI ontologyIRI = IRI.create(statementConceptNamespace + "#");
 		OWLDataFactory factory = ontology.getOWLOntologyManager().getOWLDataFactory();
@@ -252,8 +254,6 @@ public class CustomSubsumptionTesterSHIELD {
 		boolean kernelSubsumption = isSubsumedBy(subClass, superClass, kernelReasoner);
 		boolean classifiedSubsumption = isSubsumedBy(subClass, superClass, classifiedReasoner);	
 		return (kernelSubsumption || classifiedSubsumption);
-//		return ( classExpressionIsSubsumedBy(subClass, superClass, kernelReasoner) ||
-	//			 classExpressionIsSubsumedBy(subClass, superClass, classifiedReasoner)  );
 	}
 
 	
@@ -263,8 +263,6 @@ public class CustomSubsumptionTesterSHIELD {
 	}
 	
 
-
-	
 	@SuppressWarnings("deprecation")
 	public static OWLClassExpression getNormalizedAxiomDefinition(ElkClass elkClass, OWLOntology ontology) {
 		OWLClass owlClass = ElkConverter.getInstance().convert(elkClass);
@@ -289,7 +287,7 @@ public class CustomSubsumptionTesterSHIELD {
         }
 		return owlClass;  //TEMP placeholder; return the 2nd OWLClassExpression in owlAxiom, unless it's an exception
 	}
-
+**/
 	
 	private boolean pattern(OWLClassExpression subNodeClassExpression, OWLClassExpression superNodeClassExpression, Pattern targetPattern) {
 		Pattern thisPattern = Pattern.NOTHANDLEDPATTERN;

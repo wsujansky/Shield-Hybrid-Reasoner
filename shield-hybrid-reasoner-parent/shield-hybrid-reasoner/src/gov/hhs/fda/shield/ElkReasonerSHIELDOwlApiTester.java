@@ -23,6 +23,7 @@ public class ElkReasonerSHIELDOwlApiTester {
 	public static void main(String[] args) {
 		
 		OWLOntology ontology = null;
+		String ontologyNamespace = "http://www.hhs.fda.org/shield/SWEC-Ontology";  
 		
 		// Instantiate OntologyManager
 		OWLOntologyManager ontologyManager = OWLManager.createOWLOntologyManager();
@@ -55,10 +56,10 @@ public class ElkReasonerSHIELDOwlApiTester {
 // Perform a specific subsumption test on any class expression using CustomSubsumptionTesterSHIELD
 		String superClassName = "No_family_history_Angina-situation-";
 		String subClassName = "No-family-history-Cardiovascular-disease-situation";
-		OWLClass superClass = buildOWLClassSWEC(superClassName, ontologyManager);
-		OWLClass subClass = buildOWLClassSWEC(subClassName, ontologyManager);
+		OWLClass superClass = buildOWLClassSWEC(ontologyNamespace, superClassName, ontologyManager);
+		OWLClass subClass = buildOWLClassSWEC(ontologyNamespace, subClassName, ontologyManager);
 		System.out.println("Does " + superClass + " subsume " + subClass + ": " +
-		        tester.classExpressionIsSubsumedBy((OWLClassExpression) subClass, (OWLClassExpression) superClass, reasoner));
+		        tester.isSubsumedBy((OWLClassExpression) subClass, (OWLClassExpression) superClass, reasoner));
 		
 // dispose()  [Note:  Will shut down the internal Reasoner instance in 1 minute]
 		System.out.println("running dispose()...");
@@ -90,28 +91,28 @@ public class ElkReasonerSHIELDOwlApiTester {
 		System.out.println("getIndividualNodeSetPolicy(): " + reasoner.getIndividualNodeSetPolicy());
 				
 // getInstances  
-		OWLClassExpression classExpression = (OWLClassExpression) buildOWLClassSWEC("PRESENT_History-of-Asthma-in-Natural-Brother-Recently", ontologyManager);
+		OWLClassExpression classExpression = (OWLClassExpression) buildOWLClassSWEC(ontologyNamespace, "PRESENT_History-of-Asthma-in-Natural-Brother-Recently", ontologyManager);
 		System.out.println();
 		System.out.println("getInstances(" + classExpression + ")[Direct Only]: " 
 				+ reasoner.getInstances(classExpression, true));
 		System.out.println("getInstances(" + classExpression + ")[ALL]: " 
 				+ reasoner.getInstances(classExpression, false));
 
-		classExpression = (OWLClassExpression) buildOWLClassSWEC("PRESENT_FH-of-Respiratory-Disease-Past-or-Current", ontologyManager);		
+		classExpression = (OWLClassExpression) buildOWLClassSWEC(ontologyNamespace, "PRESENT_FH-of-Respiratory-Disease-Past-or-Current", ontologyManager);		
 		System.out.println();
 		System.out.println("getInstances(" + classExpression + ")[Direct Only]: " 
 				+ reasoner.getInstances(classExpression, true));
 		System.out.println("getInstances(" + classExpression + ")[ALL]: " 
 				+ reasoner.getInstances(classExpression, false));
 		
-		classExpression = (OWLClassExpression) buildOWLClassSWEC("Natural-Brother", ontologyManager);
+		classExpression = (OWLClassExpression) buildOWLClassSWEC(ontologyNamespace, "Natural-Brother", ontologyManager);
 		System.out.println();
 		System.out.println("getInstances(" + classExpression + ")[Direct Only]: " 
 				+ reasoner.getInstances(classExpression, true));
 		System.out.println("getInstances(" + classExpression + ")[ALL]: " 
 				+ reasoner.getInstances(classExpression, false));
 
-		classExpression = (OWLClassExpression) buildOWLClassSWEC("Person", ontologyManager);
+		classExpression = (OWLClassExpression) buildOWLClassSWEC(ontologyNamespace, "Person", ontologyManager);
 		System.out.println();
 		System.out.println("getInstances(" + classExpression + ")[Direct Only]: " 
 				+ reasoner.getInstances(classExpression, true));
@@ -144,14 +145,14 @@ public class ElkReasonerSHIELDOwlApiTester {
 		System.out.println("getRootOntology(): " + reasoner.getRootOntology());
 		
 // getSubClasses
-		OWLClassExpression subClassExpression = (OWLClassExpression) buildOWLClassSWEC("No-family-history-Ischemic-heart-disease-situation", ontologyManager);
+		OWLClassExpression subClassExpression = (OWLClassExpression) buildOWLClassSWEC(ontologyNamespace, "No-family-history-Ischemic-heart-disease-situation", ontologyManager);
 		System.out.println("getSubClasses("  + subClassExpression + ") [Direct Only]: " + 
 		                    reasoner.getSubClasses(subClassExpression, true));
 		System.out.println("getSubClasses("  + subClassExpression + ") [All]: " + 
                 reasoner.getSubClasses(subClassExpression, false));
 
 // getSuperClasses
-		OWLClassExpression superClassExpression = (OWLClassExpression) buildOWLClassSWEC("No-family-history-Ischemic-heart-disease-situation", ontologyManager);
+		OWLClassExpression superClassExpression = (OWLClassExpression) buildOWLClassSWEC(ontologyNamespace, "No-family-history-Ischemic-heart-disease-situation", ontologyManager);
 		System.out.println("getSuperClasses("  + superClassExpression + ")[Direct Only]: " + 
 		                    reasoner.getSuperClasses(superClassExpression, true));
 		System.out.println("getSuperClasses("  + superClassExpression + ")[All]: " + 
@@ -172,7 +173,7 @@ public class ElkReasonerSHIELDOwlApiTester {
 		//System.out.println("getTopObjectPropertyNode(): " + reasoner.getTopObjectPropertyNode());
 
 // getTypes
-		OWLNamedIndividual namedIndiv = buildOWLIndividualSWEC("JohnDoesAsthma", ontologyManager);
+		OWLNamedIndividual namedIndiv = buildOWLIndividualSWEC(ontologyNamespace, "JohnDoesAsthma", ontologyManager);
 		System.out.println("getTypes(" + namedIndiv + ")[Direct Only]: " 
 				+ reasoner.getTypes(namedIndiv, true));
 		System.out.println("getTypes(" + namedIndiv + ")[All]: " 
@@ -242,7 +243,7 @@ public class ElkReasonerSHIELDOwlApiTester {
 		System.out.println("isPrecomputed( InferenceType.CLASS_HIERARCHY ): " + reasoner.isPrecomputed(InferenceType.CLASS_HIERARCHY));
 		
 // isSatisfiable
-				OWLClassExpression classExpr = (OWLClassExpression) buildOWLClassSWEC("Twin-Brother", ontologyManager);
+				OWLClassExpression classExpr = (OWLClassExpression) buildOWLClassSWEC(ontologyNamespace, "Twin-Brother", ontologyManager);
 				System.out.println("isSatisfiable( " + classExpr + "): " + 
 		                reasoner.isSatisfiable(classExpr));
 				
@@ -262,14 +263,12 @@ public class ElkReasonerSHIELDOwlApiTester {
 									
 	}
 	
-	public static OWLClass buildOWLClassSWEC(String ClassName, OWLOntologyManager ontologyManager) {
-		IRI ontologyIRI = IRI.create("http://www.hhs.fda.org/shield/SWEC-Ontology#");
-		return ontologyManager.getOWLDataFactory().getOWLClass(IRI.create(ontologyIRI + ClassName));
+	public static OWLClass buildOWLClassSWEC(String classNamespace, String className, OWLOntologyManager ontologyManager) {
+		return ontologyManager.getOWLDataFactory().getOWLClass(IRI.create(classNamespace + "#" + className));
 	}
 	
-	public static OWLNamedIndividual buildOWLIndividualSWEC(String IndividualName, OWLOntologyManager ontologyManager) {
-		IRI ontologyIRI = IRI.create("http://www.hhs.fda.org/shield/SWEC-Ontology#");
-		return ontologyManager.getOWLDataFactory().getOWLNamedIndividual(IRI.create(ontologyIRI + IndividualName));
+	public static OWLNamedIndividual buildOWLIndividualSWEC(String classNamespace, String IndividualName, OWLOntologyManager ontologyManager) {
+		return ontologyManager.getOWLDataFactory().getOWLNamedIndividual(IRI.create(classNamespace + IndividualName));
 	}
 
 

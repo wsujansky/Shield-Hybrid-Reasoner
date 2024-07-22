@@ -689,18 +689,6 @@ public class SubsumptionNormalFormBuilderSHIELD {
 		return situationAbsentRole;
 	}
 	
-/* ORIG VERSION
- 		private OWLObjectSomeValuesFrom createAbsentProperty(String absenceNamespace, String absencePropertyString absenceValue) {
-		OWLDataFactory factory = statementOntology.getOWLOntologyManager().getOWLDataFactory();
-		String iriBase = "http://www.hhs.fda.org/shield/SWEC-Ontology";
-		IRI absentValueIri = IRI.create(iriBase + "#Absent");
-		OWLClass absentValueClass = factory.getOWLClass(absentValueIri);
-		IRI situationPresencePropertyIri = IRI.create(iriBase + "#Situation-Presence");
-		OWLProperty situationPresenceProperty = factory.getOWLObjectProperty(situationPresencePropertyIri);
-		OWLObjectSomeValuesFrom situationAbsentRole = factory.getOWLObjectSomeValuesFrom((OWLObjectPropertyExpression) situationPresenceProperty, (OWLClassExpression) absentValueClass);
-		return situationAbsentRole;
-	}
-*/
 
 	@SuppressWarnings("deprecation")
 	public Set<OWLClassAxiom> getLogicalAxioms(OWLClass concept, OWLOntology statementOntology) {
