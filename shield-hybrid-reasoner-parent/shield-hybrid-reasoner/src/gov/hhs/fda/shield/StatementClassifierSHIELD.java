@@ -35,8 +35,8 @@ public class StatementClassifierSHIELD {
 	private String statementConceptNamespace;
 	private String statementConceptName;
 	private String temporalAnnotationOwlIRI;
-	private String owlThingIRI;
-	private String owlNothingIRI;
+//	private String owlThingIRI;
+//	private String owlNothingIRI;
 	private String absenceNamespace;
 	private String absenceProperty;
 	private String absenceValue;
@@ -52,8 +52,8 @@ public class StatementClassifierSHIELD {
 		this.statementConceptNamespace = DefaultProperties.STATEMENT_CONCEPT_NAMESPACE;
 		this.statementConceptName = DefaultProperties.STATEMENT_CONCEPT_NAME;
 		this.temporalAnnotationOwlIRI = DefaultProperties.TEMPORAL_ANNOTATION_OWL_IRI;
-		this.owlThingIRI = DefaultProperties.OWL_NOTHING_IRI;
-		this.owlNothingIRI = DefaultProperties.OWL_NOTHING_IRI;
+//		this.owlThingIRI = DefaultProperties.OWL_NOTHING_IRI;
+//		this.owlNothingIRI = DefaultProperties.OWL_NOTHING_IRI;
 		this.absenceNamespace = DefaultProperties.ABSENCE_NAMESPACE;
 		this.absenceProperty = DefaultProperties.ABSENCE_PROPERTY;
 		this.absenceValue = DefaultProperties.ABSENCE_VALUE;
@@ -66,21 +66,23 @@ public class StatementClassifierSHIELD {
 				 																 this.absenceValue);	
 		subsumptionNormalFormBuilder.init();
 		subsumptionNormalFormBuilder.generate();
-		subsumptionTester = new CustomSubsumptionTesterSHIELD(kernelOntology, this.statementConceptNamespace, this.statementConceptName, 
-															  this.temporalAnnotationOwlIRI, this.owlThingIRI, this.owlNothingIRI);
+		subsumptionTester = new CustomSubsumptionTesterSHIELD(kernelOntology, this.temporalAnnotationOwlIRI);
 	}
 		
+//	public StatementClassifierSHIELD(OWLOntology kernelOntology, OWLOntology statementOntology, OWLReasoner kernelOwlReasoner, 
+//				OWLReasoner statementOwlReasoner, String statementConceptNamespace, String statementConceptName, String temporalAnnotationOwlIRI,
+//				String owlThingIRI, String owlNothingIRI, String absenceNamespace, String absenceProperty, String absenceValue) {
 	public StatementClassifierSHIELD(OWLOntology kernelOntology, OWLOntology statementOntology, OWLReasoner kernelOwlReasoner, 
-				OWLReasoner statementOwlReasoner, String statementConceptNamespace, String statementConceptName, String temporalAnnotationOwlIRI,
-				String owlThingIRI, String owlNothingIRI, String absenceNamespace, String absenceProperty, String absenceValue) {
+									OWLReasoner statementOwlReasoner, String statementConceptNamespace, String statementConceptName, String temporalAnnotationOwlIRI,
+									String absenceNamespace, String absenceProperty, String absenceValue) {
 		this.statementOntology_ = statementOntology;
 		this.kernelOwlReasoner_ = kernelOwlReasoner;
 		this.statementOwlReasoner_ = statementOwlReasoner;
 		this.statementConceptNamespace = statementConceptNamespace;
 		this.statementConceptName = statementConceptName;
 		this.temporalAnnotationOwlIRI = temporalAnnotationOwlIRI;
-		this.owlThingIRI = owlThingIRI;
-		this.owlNothingIRI = owlNothingIRI;
+//		this.owlThingIRI = owlThingIRI;
+//		this.owlNothingIRI = owlNothingIRI;
 		this.absenceNamespace = absenceNamespace;
 		this.absenceProperty = absenceProperty;
 		this.absenceValue = absenceValue;
@@ -93,8 +95,7 @@ public class StatementClassifierSHIELD {
 				 																 absenceValue);	
 		subsumptionNormalFormBuilder.init();
 		subsumptionNormalFormBuilder.generate();
-		subsumptionTester = new CustomSubsumptionTesterSHIELD(kernelOntology, statementConceptNamespace, statementConceptName, 
-				                                              temporalAnnotationOwlIRI, owlThingIRI, owlNothingIRI);
+		subsumptionTester = new CustomSubsumptionTesterSHIELD(kernelOntology, temporalAnnotationOwlIRI);
 	}
 
 

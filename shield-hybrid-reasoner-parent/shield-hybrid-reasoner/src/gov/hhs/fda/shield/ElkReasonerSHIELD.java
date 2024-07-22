@@ -81,8 +81,8 @@ public class ElkReasonerSHIELD extends ElkReasoner {
 		this.statementConceptNamespace = DefaultProperties.STATEMENT_CONCEPT_NAMESPACE;
 		this.statementConceptName = DefaultProperties.STATEMENT_CONCEPT_NAME;
 		this.temporalAnnotationOwlIRI = DefaultProperties.TEMPORAL_ANNOTATION_OWL_IRI;
-		this.owlThingIRI = DefaultProperties.OWL_THING_IRI;
-		this.owlNothingIRI = DefaultProperties.OWL_NOTHING_IRI;
+//		this.owlThingIRI = DefaultProperties.OWL_THING_IRI;
+//		this.owlNothingIRI = DefaultProperties.OWL_NOTHING_IRI;
 		this.absenceNamespace = DefaultProperties.ABSENCE_NAMESPACE;
 		this.absenceProperty = DefaultProperties.ABSENCE_PROPERTY;
 		this.absenceValue = DefaultProperties.ABSENCE_VALUE;
@@ -197,8 +197,8 @@ public class ElkReasonerSHIELD extends ElkReasoner {
 		// needed by the subsequent classifyStatementConcepts operation.
 		this.classifier = new StatementClassifierSHIELD(this.owlOntology_, statementOntology, this, statementOwlReasoner,
 				                                        DefaultProperties.STATEMENT_CONCEPT_NAMESPACE, DefaultProperties.STATEMENT_CONCEPT_NAME,
-				                                        DefaultProperties.TEMPORAL_ANNOTATION_OWL_IRI, DefaultProperties.OWL_THING_IRI, DefaultProperties.OWL_NOTHING_IRI,
-				                                        DefaultProperties.ABSENCE_NAMESPACE, DefaultProperties.ABSENCE_PROPERTY, DefaultProperties.ABSENCE_VALUE);
+				                                        DefaultProperties.TEMPORAL_ANNOTATION_OWL_IRI, DefaultProperties.ABSENCE_NAMESPACE, 
+				                                        DefaultProperties.ABSENCE_PROPERTY, DefaultProperties.ABSENCE_VALUE);
 		classifier.classifyStatementConcepts(this.owlOntology_, statementOntology, this, statementOwlReasoner);
 		
 		// After all statements have been classified within the taxonomy of the kernelReasoner, we set
@@ -256,8 +256,8 @@ System.out.println(statementOntology);
 		// needed by the subsequent classifyStatementConcepts operation.
 		this.classifier = new StatementClassifierSHIELD(this.owlOntology_, statementOntology, this, statementOwlReasoner,
                                                         DefaultProperties.STATEMENT_CONCEPT_NAMESPACE, DefaultProperties.STATEMENT_CONCEPT_NAME,
-				                                        DefaultProperties.TEMPORAL_ANNOTATION_OWL_IRI, DefaultProperties.OWL_THING_IRI, DefaultProperties.OWL_NOTHING_IRI,
-				                                        DefaultProperties.ABSENCE_NAMESPACE, DefaultProperties.ABSENCE_PROPERTY, DefaultProperties.ABSENCE_VALUE);
+				                                        DefaultProperties.TEMPORAL_ANNOTATION_OWL_IRI, DefaultProperties.ABSENCE_NAMESPACE, 
+				                                        DefaultProperties.ABSENCE_PROPERTY, DefaultProperties.ABSENCE_VALUE);
 		classifier.classifyStatementConcepts(this.owlOntology_, statementOntology, this, statementOwlReasoner);
 		
 		// After all statements have been classified within the taxonomy of the kernelReasoner, we set
