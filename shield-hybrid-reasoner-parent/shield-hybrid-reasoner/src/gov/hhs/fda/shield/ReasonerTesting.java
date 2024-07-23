@@ -29,7 +29,9 @@ public class ReasonerTesting {
 		OWLOntology originalOnt = ontologyManager.loadOntologyFromOntologyDocument(
 //		new File("C:/Users/wsuja/Documents/ConsultingEngagements/FDA/Research/SWEC-Classification/SWEC-Ontology-Example-PROPERTY-TESTING-YES-CLASSIFIED-NO-ANNOTATION.owx"));
 //		new File("C:/Users/wsuja/Documents/ConsultingEngagements/FDA/Research/SWEC-Classification/SWEC-Ontology-Example-PROPERTY-TESTING-NO-CLASSIFIED-YES-ANNOTATION.owx"));
+//		new File("C:/Users/wsuja/Documents/ConsultingEngagements/FDA/Research/SWEC-Classification/SWEC-Ontology-Example-PROPERTY-TESTING-NO-CLASSIFIED-YES-ANNOTATION-CHANGED-ONTOLOGY-PROPERTIES.owx"));
 		new File("C:/Users/wsuja/Documents/ConsultingEngagements/FDA/Research/SWEC-Classification/SWEC-Ontology-Example-9.owx"));
+//		new File("C:/Users/wsuja/Documents/ConsultingEngagements/FDA/Research/SWEC-Classification/SWEC-Ontology-Example-9-CHANGED-ONTOLOGY-PROPERTIES.owx"));
 // DEBUG		System.out.println("THE ORIGINAL ONTOLOGY");
 // DEBUG		System.out.println(originalOnt);
 // DEBUG 		OntologyExplorer.printOntologyParsedAxioms(originalOnt);

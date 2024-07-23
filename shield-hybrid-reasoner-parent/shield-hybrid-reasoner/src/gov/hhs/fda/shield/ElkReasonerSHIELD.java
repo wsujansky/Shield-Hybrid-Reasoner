@@ -131,7 +131,7 @@ public class ElkReasonerSHIELD extends ElkReasoner {
  		if (LOGGER_.isDebugEnabled())
  
 			LOGGER_.debug("precomputeInferences(InferenceType...)");
-// Not implemented; unsure if needed		checkInterrupted();
+// Not implemented; unsure if needed:		checkInterrupted();
 		// we use the main progress monitor only here
 		this.reasoner_.setProgressMonitor(this.mainProgressMonitor_);
 		try {
@@ -204,9 +204,24 @@ public class ElkReasonerSHIELD extends ElkReasoner {
 	}
 	
 	
-	/***   TODO:  Change back to protected after testing; this just needs to be called by flush(), I believe  */
+	/* This method is called by the constructor for the super class "ElkReasoner," which is called by the constructor for this
+	 * class "ElkReasonerSHIELD" (see above); 
+	 * The method first instantiates an ElkReasoner object ("this.reasoner"), which classifies the input ontology using the standard EL++ reasoning
+	 * and classification logic.
+	 * The method then copes all of the axioms in the input ontology that define Statement Concepts into a temporary OWLOntology object called
+	 * "statementOntology".  This temporary ontology is then loaded into a StructuralOntology object, and each of the Statement Concepts are
+	 * classified into a stated hierarchy (i.e., without any logical inference).
+	 * The method then calls the method StatementClassifierSHIELD.classifyStatementConcepts, which first normalizes each of the Statement Concepts in
+	 * the statementOntology, and then classifies each of these Statement Concepts with respect to each other using hybrid-reasoning algorithms
+	 * (which correctly handle absent concepts and concepts with temporal attributes).
+	 * As part of the hybrid-reasoning classification process, the correctly classified Statement Concepts are each moved back into the 
+	 * originally created class hierarchy in the ElkReasoner object.  This hierarchy (taxonomy) is thenceforth the data struture on which
+	 * all of the ElkReasonerSHIELD's methods operate.
+	 * Note that the Statement Concepts that had been originally (incorrectly) classified in the class hierarchy of the ElkReasoner object 
+	 * get removed from that hierarchy prior to the addition of the correctly classified Statement Concepts.
+	 */
 	@Override
-	public void reCreateReasoner() {
+	protected void reCreateReasoner() {
 		this.reasoner_ = new ReasonerFactory().createReasoner(
 				new OwlOntologyLoader(owlOntology_, this.mainProgressMonitor_),
 				stageExecutor_, config_);
@@ -232,8 +247,8 @@ public class ElkReasonerSHIELD extends ElkReasoner {
 //DEBUG System.out.println("ORIGINAL KERNEL REASONER TAXONOMY - IN reCreateReasoner");
 //DEBUG ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) this, false);
 
-System.out.println("ORIGINAL STATEMENT ONTOLOGY - IN reCreateReasoner: ");
-System.out.println(statementOntology); 
+//System.out.println("ORIGINAL STATEMENT ONTOLOGY - IN reCreateReasoner: ");
+//System.out.println(statementOntology); 
 
 //DEBUG System.out.println("ORIGINAL KERNEL REASONER TAXONOMY - IN reCreateReasoner");
 //DEBUG ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) kernelElkReasoner, false);
