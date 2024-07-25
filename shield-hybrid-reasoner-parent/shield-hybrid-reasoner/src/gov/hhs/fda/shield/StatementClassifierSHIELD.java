@@ -145,18 +145,29 @@ public class StatementClassifierSHIELD {
 	
 	//  Note:  This method assumes that the root of the statement hierarchy is a direct child of the kernelElkReasoner taxonomy top node
 	//  TODO:  Generalize this method not to make the assumption above, but to use a breadth-first search for the root in the entire kernelElkReasoner taxonomy
-	private boolean removeStatementHierachyFromKernelTaxonomy(String targetIri, OWLOntology statementOntology, OWLReasoner statementOwlReasoner, ConcurrentClassTaxonomy kernelElkReasonerTaxonomy) {
-		Node<OWLClass> targetNode = getNamedOwlClassNodeFromStatementReasoner(targetIri, statementOntology, statementOwlReasoner);
-		TaxonomyNode<ElkClass> taxonomyTopNode = kernelElkReasonerTaxonomy.getTopNode();  
-		for (TaxonomyNode<ElkClass> childOfTaxonomyTopNode : taxonomyTopNode.getDirectSubNodes()) {  // iterate through children
-			for (ElkClass currentElkClass : childOfTaxonomyTopNode.getMembers()) { // iterate through each member of the child (an ElkClass)
-				if(ElkConverter.getInstance().convert(currentElkClass).equals(targetNode.getEntities().iterator().next())) { 
-					removeTaxonomySubTree(childOfTaxonomyTopNode, taxonomyTopNode, kernelElkReasonerTaxonomy);
-					return true;
+	private boolean removeStatementHierachyFromKernelTaxonomy(String targetIri, OWLOntology statementOntology,
+			OWLReasoner statementOwlReasoner, ConcurrentClassTaxonomy kernelElkReasonerTaxonomy) {
+		Node<OWLClass> targetNode = getNamedOwlClassNodeFromStatementReasoner(targetIri, statementOntology,
+				statementOwlReasoner);
+		if (targetNode == null) {
+			throw new RuntimeException(
+					"Root node of sub-tree to be removed from kernelReasoner not found in kernelReasoner hierarchy: " + targetIri);
+		} else {
+			TaxonomyNode<ElkClass> taxonomyTopNode = kernelElkReasonerTaxonomy.getTopNode();
+			for (TaxonomyNode<ElkClass> childOfTaxonomyTopNode : taxonomyTopNode.getDirectSubNodes()) { // iterate
+																										// through
+																										// children
+				for (ElkClass currentElkClass : childOfTaxonomyTopNode.getMembers()) { // iterate through each member of
+																						// the child (an ElkClass)
+					if (ElkConverter.getInstance().convert(currentElkClass)
+							.equals(targetNode.getEntities().iterator().next())) {
+						removeTaxonomySubTree(childOfTaxonomyTopNode, taxonomyTopNode, kernelElkReasonerTaxonomy);
+						return true;
+					}
 				}
 			}
 		}
-		return false;  // if the targetName node is not found as a child of the taxonomyTopNode
+		return false; // if the targetName node is not found as a child of the taxonomyTopNode
 	}
 
 	private void removeTaxonomySubTree(TaxonomyNode<ElkClass> taxonomyNode, TaxonomyNode<ElkClass> parentTaxonomyNode,
