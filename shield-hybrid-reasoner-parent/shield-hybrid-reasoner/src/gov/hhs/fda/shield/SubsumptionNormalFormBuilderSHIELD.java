@@ -30,7 +30,7 @@ import org.semanticweb.owlapi.model.OWLSubPropertyChainOfAxiom;
 import org.semanticweb.owlapi.model.OWLTransitiveObjectPropertyAxiom;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 
-public class SubsumptionNormalFormBuilderSHIELD {
+public class SubsumptionNormalFormBuilderSHIELD { 
 
 	private OWLOntology statementOntology;
 	private OWLOntology kernelOntology;
@@ -43,9 +43,12 @@ public class SubsumptionNormalFormBuilderSHIELD {
 	private HashMap<OWLObjectProperty, Set<OWLObjectProperty>> superProps = new HashMap<>();
 	private HashMap<OWLClass, List<SubsumptionNormalFormSHIELD>> unmergedSubsumptionNormalFormsSHIELD = new HashMap<>();
 	private HashMap<OWLClass, SubsumptionNormalFormSHIELD> subsumptionNormalFormsSHIELD = new HashMap<>();
-	private String absenceNamespace;
-	private String absenceProperty;
-	private String absenceValue;
+	private String absencePropertyNamespace;
+	private String absencePropertyName;
+	private String absenceValueNamespace;
+	private String absenceValueName;
+	
+	private int countNormalized = 0;
 
 	public List<OWLClass> getConcepts() {
 		return concepts;
@@ -72,9 +75,10 @@ public class SubsumptionNormalFormBuilderSHIELD {
 		this.statementOntology = statementOntology;
 		this.kernelOwlReasoner = kernelOwlReasoner;
 		this.statementOwlReasoner = statementOwlReasoner;
-		this.absenceNamespace = DefaultProperties.ABSENCE_NAMESPACE;
-		this.absenceProperty = DefaultProperties.ABSENCE_PROPERTY;
-		this.absenceValue = DefaultProperties.ABSENCE_VALUE;
+		this.absencePropertyNamespace = DefaultProperties.ABSENCE_PROPERTY_NAMESPACE;
+		this.absencePropertyName = DefaultProperties.ABSENCE_PROPERTY_NAME;
+		this.absenceValueNamespace = DefaultProperties.ABSENCE_VALUE_NAMESPACE;
+		this.absenceValueName = DefaultProperties.ABSENCE_VALUE_NAME;
 		this.subsumptionTester  = new CustomSubsumptionTesterSHIELD(kernelOntology);
 	}
 
@@ -84,15 +88,17 @@ public class SubsumptionNormalFormBuilderSHIELD {
 			 OWLReasoner statementOwlReasoner,
 			 String absenceNamespace,
 			 String absenceProperty,
-			 String absenceValue) {
+			 String absenceValueNamespace,
+			 String absenceValueName) {
 		super();
 		this.kernelOntology = kernelOntology;
 		this.statementOntology = statementOntology;
 		this.kernelOwlReasoner = kernelOwlReasoner;
 		this.statementOwlReasoner = statementOwlReasoner;
-		this.absenceNamespace = absenceNamespace;
-		this.absenceProperty = absenceProperty;
-		this.absenceValue = absenceValue;
+		this.absencePropertyNamespace = absenceNamespace;
+		this.absencePropertyName = absenceProperty;
+		this.absenceValueNamespace = absenceValueNamespace;
+		this.absenceValueName = absenceValueName;
 		this.subsumptionTester  = new CustomSubsumptionTesterSHIELD(kernelOntology);
 	}
 	
@@ -138,7 +144,9 @@ public class SubsumptionNormalFormBuilderSHIELD {
 ***/
 
 	public void init() {
+//ReasonerExplorer.pause("about to initialize concepts");
 		initConcepts();
+//ReasonerExplorer.pause("about to initialize roles");
 		initRoles();
 		for (OWLAxiom ax : statementOntology.getAxioms()) {
 //			if( ax.getAxiomType().getName().equals("Declaration")) {
@@ -246,6 +254,9 @@ public class SubsumptionNormalFormBuilderSHIELD {
 	
 	public void generate() {   // was public void generate(Roles roles)
 // Needed??		Reasoner.processingSubsumptionNormalFormSHIELD = true;
+		
+//ReasonerExplorer.pause("about to generate subsumptionNormalizedConcepts");
+
 		for (OWLClass concept : concepts) {
 			for (OWLClassAxiom axiom : getLogicalAxioms(concept, statementOntology)) {
 				unmergedSubsumptionNormalFormsSHIELD.put(concept, new ArrayList<>());
@@ -260,6 +271,10 @@ public class SubsumptionNormalFormBuilderSHIELD {
 // DEBUG System.out.println("Simplified/Merged SNF for " + concept + " is :");
 // DEBUG System.out.println(" " + subsumptionNormalFormSHIELD.get(concept));
 			}
+			
+if (++countNormalized % 50 == 0)
+	System.out.println("Normalized " + countNormalized);
+
 		}
 // Needed??	Reasoner.processingSubsumptionNormalFormSHIELD = false;
 	}
@@ -656,20 +671,64 @@ public class SubsumptionNormalFormBuilderSHIELD {
 	 */
 	private boolean isAbsentConcept(SubsumptionNormalFormSHIELD merged_nnf) {
 //		OWLObjectSomeValuesFrom absentProperty = createAbsentProperty();
-		OWLObjectSomeValuesFrom absentProperty = createAbsentSomeValuesFrom(this.absenceNamespace,
-																			this.absenceProperty,
-																			this.absenceValue);
-		if (merged_nnf.getUngroupedProps().contains(absentProperty))
+		OWLObjectSomeValuesFrom absentProperty = createAbsentSomeValuesFrom(this.absencePropertyNamespace,
+																			this.absencePropertyName,
+																			this.absenceValueNamespace,
+																			this.absenceValueName);
+//		if (merged_nnf.getUngroupedProps().contains(absentProperty))
+		if (containsAbsentProperty(merged_nnf.getUngroupedProps(), absentProperty, 
+				                   DefaultProperties.ROLE_GROUP_PROPERTY_NAMESPACE, 
+				                   DefaultProperties.ROLE_GROUP_PROPERTY_NAME))
 			return true;
 		else return false;
 	}
+	
+//	ROLE_GROUP_PROPERTY_NAMESPACE = "http://www.hhs.fda.org/shield/SWEC-Ontology#";
+//	public static final String ROLE_GROUP_PROPERTY_NAME)
+	
+	private boolean containsAbsentProperty(Set<OWLObjectSomeValuesFrom> ungroupedProps, OWLObjectSomeValuesFrom absentProperty, 
+										   String roleGroupPropertyNamespace, String roleGroupPropertyName) {
+		// Test if absentProperty is among top-level class expressions
+		if (ungroupedProps.contains(absentProperty))
+			return true;
+		// Test if absentProperty is among intersection of class expressions within a top-level role group
+		IRI roleGroupPropertyIri = IRI.create(roleGroupPropertyNamespace,roleGroupPropertyName);
+		for (Iterator iterator = ungroupedProps.iterator(); iterator.hasNext();) {
+			OWLObjectSomeValuesFrom prop = (OWLObjectSomeValuesFrom) iterator.next();
+			if (prop.getProperty().getNamedProperty().getIRI().equals(roleGroupPropertyIri)) {
+				OWLClassExpression propertyValue = prop.getFiller();
+				if (propertyValue instanceof OWLObjectSomeValuesFrom) {
+					if (((OWLObjectSomeValuesFrom) propertyValue).equals(absentProperty))
+						return true;
+				}
+				else if (propertyValue instanceof OWLObjectIntersectionOf) {
+					Set<OWLClassExpression> intersectedClassExpressions = ((OWLObjectIntersectionOf)propertyValue).getOperands();
+					for (Iterator iterator2 = intersectedClassExpressions.iterator(); iterator2.hasNext();) {
+						OWLClassExpression classExpression = (OWLClassExpression) iterator2.next();
+						if (classExpression instanceof OWLObjectSomeValuesFrom)
+							if (((OWLObjectSomeValuesFrom) classExpression).equals(absentProperty))
+										return true;
+					}
+				}
+				else {
+					// throw exception; filler of role group must either be a single OWLObjectSomeValuesFrom
+					// constraint or an intersection of OWLObjectSomeValuesFrom constraints
+					throw new RuntimeException("Error:  Filler of the Role-Group property " + roleGroupPropertyIri.toString() +
+							                   " must be either an OWLObjectSomeValuesFrom or an OWLObjectIntersectionOf object");
+
+				}
+			}
+		}
+		return false;
+	};
 	
 	/** Specifies the ObjectSomeValuesFrom constraint that defines an 'absent' concept in the input OWL ontology.  
  		For example, the following parameter values for this method:
  		
  			absenceNamespace = "http://www.hhs.fda.org/shield/SWEC-Ontology"
  			absenceProperty = "Situation-Presence"
- 			absenceValue = "Absent"
+ 			absenceValueNamesapce = "http://www.hhs.fda.org/shield/SWEC-Ontology"
+ 			absenceValueName = "Absent"
  			
  		would specify that the following ObjectSomeValuesFrom constraint defines an 'absent' concept (i.e., a concept is an
  		'absent' concept if and only if it has the following ObjectSomeValuesFrom constraint):
@@ -678,12 +737,15 @@ public class SubsumptionNormalFormBuilderSHIELD {
                 <ObjectProperty IRI="http://www.hhs.fda.org/shield/SWEC-Ontology#Situation-Presence"/>
                 <Class IRI="http://www.hhs.fda.org/shield/SWEC-Ontology#Absent"/>	
 	 */
-	private OWLObjectSomeValuesFrom createAbsentSomeValuesFrom(String absenceNamespace, String absenceProperty, String absenceValue) {
+	private OWLObjectSomeValuesFrom createAbsentSomeValuesFrom(String absencePropertyNamespace, String absencePropertyName, 
+															   String absenceValueNamespace, String absenceValueName) {
 		OWLDataFactory factory = statementOntology.getOWLOntologyManager().getOWLDataFactory();
-		String iriBase = absenceNamespace;
-		IRI absentValueIri = IRI.create(iriBase + "#" + absenceValue);
+//		String iriBase = absenceValueNamespace;
+//		IRI absentValueIri = IRI.create(iriBase + "#" + absenceValue);
+		IRI absentValueIri = IRI.create(absenceValueNamespace + absenceValueName);
 		OWLClass absentValueClass = factory.getOWLClass(absentValueIri);
-		IRI situationPresencePropertyIri = IRI.create(iriBase + "#" + absenceProperty);
+//		IRI situationPresencePropertyIri = IRI.create(iriBase + "#" + absenceProperty);
+		IRI situationPresencePropertyIri = IRI.create(absencePropertyNamespace + absencePropertyName);
 		OWLProperty situationPresenceProperty = factory.getOWLObjectProperty(situationPresencePropertyIri);
 		OWLObjectSomeValuesFrom situationAbsentRole = factory.getOWLObjectSomeValuesFrom((OWLObjectPropertyExpression) situationPresenceProperty, (OWLClassExpression) absentValueClass);
 		return situationAbsentRole;

@@ -2,6 +2,7 @@ package gov.hhs.fda.shield;
 
 import java.io.File;
 
+import org.semanticweb.elk.owlapi.ElkReasoner;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
@@ -31,7 +32,14 @@ public class ReasonerTesting {
 //		new File("C:/Users/wsuja/Documents/ConsultingEngagements/FDA/Research/SWEC-Classification/SWEC-Ontology-Example-PROPERTY-TESTING-NO-CLASSIFIED-YES-ANNOTATION.owx"));
 //		new File("C:/Users/wsuja/Documents/ConsultingEngagements/FDA/Research/SWEC-Classification/SWEC-Ontology-Example-PROPERTY-TESTING-NO-CLASSIFIED-YES-ANNOTATION-CHANGED-ONTOLOGY-PROPERTIES.owx"));
 		new File("C:/Users/wsuja/Documents/ConsultingEngagements/FDA/Research/SWEC-Classification/SWEC-Ontology-Example-9.owx"));
+//		new File("C:/Users/wsuja/Documents/ConsultingEngagements/FDA/Research/SWEC-Classification/SWEC-Ontology-Example-9-NESTED-ROOT.owx"));
+//		new File("C:/Users/wsuja/Documents/ConsultingEngagements/FDA/Research/SWEC-Classification/SWEC-Ontology-Example-9-ROLE-GROUP-ABSENCE-SNOMED.owx"));
 //		new File("C:/Users/wsuja/Documents/ConsultingEngagements/FDA/Research/SWEC-Classification/SWEC-Ontology-Example-9-CHANGED-ONTOLOGY-PROPERTIES.owx"));
+////		new File("C:/Users/wsuja/Documents/ConsultingResources/SNOMED/ontology-2024-07-25_14-22-04_SMALL.owx"));
+//		new File("C:/Users/wsuja/Documents/ConsultingResources/SNOMED/ontology-2024-07-25_14-22-04_SMALL-ALT.owx"));
+//		new File("C:/Users/wsuja/Documents/ConsultingResources/SNOMED/ontology-2024-07-25_14-22-04_VERY-SMALL.owx"));
+//		new File("C:/Users/wsuja/Documents/ConsultingResources/SNOMED/ontology-2024-07-25_14-22-04.owx"));
+		
 // DEBUG		System.out.println("THE ORIGINAL ONTOLOGY");
 // DEBUG		System.out.println(originalOnt);
 // DEBUG 		OntologyExplorer.printOntologyParsedAxioms(originalOnt);
@@ -50,9 +58,11 @@ public class ReasonerTesting {
 //ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasonerSHIELD) reasonerSHIELD, false);		
 //System.out.println();
 		System.out.println("POST-INSTANTIATION ElkReasonerSHIELD OWL TAXONOMY");
-		ReasonerExplorer.printOwlTaxonomy(reasonerSHIELD.getTopClassNode(), 0, reasonerSHIELD);
+//		ReasonerExplorer.printOwlTaxonomy(reasonerSHIELD.getTopClassNode(), 0, reasonerSHIELD);
+//		ReasonerExplorer.printOwlTaxonomyFullIri(reasonerSHIELD.getTopClassNode(), 0, reasonerSHIELD);
+		ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) reasonerSHIELD, originalOnt, false, true);
 		System.out.println();
-		System.out.println("Disposing...");
+		System.out.println("Disposing ElkReasonerSHIELD...");
 		reasonerSHIELD.dispose();
 		// DEBUG		reasonerSHIELD.precomputeInferences(InferenceType.CLASS_HIERARCHY);
 		// DEBUG		System.out.println("POST-RECOMPUTATION KERNEL REASONER TAXONOMY - IN PRECOMPUTE");

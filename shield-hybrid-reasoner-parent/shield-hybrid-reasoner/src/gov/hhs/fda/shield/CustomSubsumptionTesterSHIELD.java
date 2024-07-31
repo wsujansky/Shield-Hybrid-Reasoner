@@ -39,6 +39,7 @@ public class CustomSubsumptionTesterSHIELD {
 		this.ontology_ = ontology; 
 		this.manager_ = ontology.getOWLOntologyManager();
 		this.temporalAnnotationOwlIRI = temporalAnnotationOwlIRI;
+//DEBUG ReasonerExplorer.pause("about to create new TemporalExpressionSubsumptionTester");
         this.temporalSubsumptionTester = new TemporalExpressionSubsumptionTester();
 	}
 

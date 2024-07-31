@@ -19,19 +19,19 @@
 			<groupId>net.sourceforge.owlapi</groupId>
 			<artifactId>owlapi-api</artifactId>
 			<version>${owlapi.version}</version>
-			<scope>provided</scope>
+		<scope>provided</scope>  	 
 		</dependency>
 		<dependency>
 			<groupId>net.sourceforge.owlapi</groupId>
 			<artifactId>owlapi-impl</artifactId>
 			<version>${owlapi.version}</version>
-			<scope>provided</scope>
+			<scope>provided</scope>  
 		</dependency>
 		<dependency>
 			<groupId>net.sourceforge.owlapi</groupId>
 			<artifactId>owlapi-apibinding</artifactId>
 			<version>${owlapi.version}</version>
-			<scope>provided</scope>
+			<scope>provided</scope>  
 		</dependency>
 <!--
 		<dependency>
@@ -93,7 +93,6 @@
 				<configuration>
 					<release>11</release>
 				</configuration>
-
 			</plugin>
 
 			<plugin>
@@ -108,6 +107,31 @@
 					</execution>
 				</executions>
 			</plugin>
+			
+    <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-assembly-plugin</artifactId>
+      <configuration>
+          <descriptorRefs>
+              <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+          <archive>
+              <manifest>
+                <mainClass>gov.hhs.fda.shield.ReasonerTesting</mainClass>
+              </manifest>
+          </archive>
+      </configuration>
+      <executions>
+          <execution>
+              <id>make-assembly</id>
+              <phase>package</phase>
+              <goals>
+                <goal>single</goal>
+              </goals>
+          </execution>
+      </executions>
+    </plugin>
+
 
 		</plugins>
 	</build>

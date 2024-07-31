@@ -264,7 +264,8 @@ public class ElkReasonerSHIELDOwlApiTester {
 	}
 	
 	public static OWLClass buildOWLClassSWEC(String classNamespace, String className, OWLOntologyManager ontologyManager) {
-		return ontologyManager.getOWLDataFactory().getOWLClass(IRI.create(classNamespace + "#" + className));
+//		return ontologyManager.getOWLDataFactory().getOWLClass(IRI.create(classNamespace + "#" + className));
+		return ontologyManager.getOWLDataFactory().getOWLClass(IRI.create(classNamespace + className));
 	}
 	
 	public static OWLNamedIndividual buildOWLIndividualSWEC(String classNamespace, String IndividualName, OWLOntologyManager ontologyManager) {

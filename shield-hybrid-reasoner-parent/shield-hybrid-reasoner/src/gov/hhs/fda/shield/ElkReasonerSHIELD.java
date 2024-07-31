@@ -1,6 +1,9 @@
 package gov.hhs.fda.shield;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -43,9 +46,10 @@ public class ElkReasonerSHIELD extends ElkReasoner {
 	private String statementConceptNamespace;
 	private String statementConceptName;
 	private String temporalAnnotationOwlIRI;
-	private String absenceNamespace;
-	private String absenceProperty;
-	private String absenceValue;
+	private String absencePropertyNamespace;
+	private String absencePropertyName;
+	private String absenceValueNamespace;
+	private String absenceValueName;
 
 	// Main class for testing only
 	public static void main(String[] args)  {
@@ -78,9 +82,10 @@ public class ElkReasonerSHIELD extends ElkReasoner {
 		this.statementConceptNamespace = DefaultProperties.STATEMENT_CONCEPT_NAMESPACE;
 		this.statementConceptName = DefaultProperties.STATEMENT_CONCEPT_NAME;
 		this.temporalAnnotationOwlIRI = DefaultProperties.TEMPORAL_ANNOTATION_OWL_IRI;
-		this.absenceNamespace = DefaultProperties.ABSENCE_NAMESPACE;
-		this.absenceProperty = DefaultProperties.ABSENCE_PROPERTY;
-		this.absenceValue = DefaultProperties.ABSENCE_VALUE;
+		this.absencePropertyNamespace = DefaultProperties.ABSENCE_PROPERTY_NAMESPACE;
+		this.absencePropertyName = DefaultProperties.ABSENCE_PROPERTY_NAME;
+		this.absenceValueNamespace = DefaultProperties.ABSENCE_VALUE_NAMESPACE;
+		this.absenceValueName = DefaultProperties.ABSENCE_VALUE_NAME;
 		
 //DEBUG System.out.println("REASONER: Completed creation of ElkReasoner super class");	
 	}	
@@ -170,10 +175,10 @@ public class ElkReasonerSHIELD extends ElkReasoner {
 		// into the statementOntology.  The resulting loadedOntology is assigned the name kernelOntology.  It will
 		// ultimately also contain the correctly classified statement concepts.  Initially, it only
 		// contains kernel concepts.
-// 		moveStatementAxioms(this.statementConceptNamespace, this.statementConceptName, owlOntology_, statementOntology, false, OntologyType.SOURCE);
  		int numStatementAxiomsMoved = moveStatementAxioms(DefaultProperties.STATEMENT_CONCEPT_NAMESPACE, DefaultProperties.STATEMENT_CONCEPT_NAME, owlOntology_, statementOntology);
  		if (numStatementAxiomsMoved == 0) 	
- 			System.out.println("WARNING:  No Statement Concepts found in ontology (looking for IRI = " + DefaultProperties.STATEMENT_CONCEPT_NAMESPACE + "#" + DefaultProperties.STATEMENT_CONCEPT_NAME);
+// 			System.out.println("WARNING:  No Statement Concepts found in ontology (looking for IRI = " + DefaultProperties.STATEMENT_CONCEPT_NAMESPACE + "#" + DefaultProperties.STATEMENT_CONCEPT_NAME);
+ 			System.out.println("WARNING:  No Statement Concepts found in ontology (looking for IRI = " + DefaultProperties.STATEMENT_CONCEPT_NAMESPACE + DefaultProperties.STATEMENT_CONCEPT_NAME);
  		else {
 
 // DEBUG System.out.println("REASONER IN preComputeHierarchy: Completed moving of axioms from original to statement ontology");	
@@ -201,8 +206,9 @@ public class ElkReasonerSHIELD extends ElkReasoner {
  			// needed by the subsequent classifyStatementConcepts operation.
  			this.classifier = new StatementClassifierSHIELD(this.owlOntology_, statementOntology, this, statementOwlReasoner,
 				                                        	DefaultProperties.STATEMENT_CONCEPT_NAMESPACE, DefaultProperties.STATEMENT_CONCEPT_NAME,
-				                                        	DefaultProperties.TEMPORAL_ANNOTATION_OWL_IRI, DefaultProperties.ABSENCE_NAMESPACE, 
-				                                        	DefaultProperties.ABSENCE_PROPERTY, DefaultProperties.ABSENCE_VALUE);
+				                                        	DefaultProperties.TEMPORAL_ANNOTATION_OWL_IRI, DefaultProperties.ABSENCE_PROPERTY_NAMESPACE, 
+				                                        	DefaultProperties.ABSENCE_PROPERTY_NAME, DefaultProperties.ABSENCE_VALUE_NAMESPACE,
+				                                        	DefaultProperties.ABSENCE_VALUE_NAME);
  			classifier.classifyStatementConcepts(this.owlOntology_, statementOntology, this, statementOwlReasoner);
 		
 //DEBUG System.out.println("POST-MIGRATION KERNEL REASONER TAXONOMY - IN preComputeHierarchy");
@@ -244,11 +250,15 @@ public class ElkReasonerSHIELD extends ElkReasoner {
 		// into the statementOntology.  The resulting loadedOntology is assigned the name kernelOntology.  It will
 		// ultimately also contain the correctly classified statement concepts.  Initially, it only
 		// contains kernel concepts.
-// 		moveStatementAxioms(DefaultProperties.STATEMENT_CONCEPT_NAMESPACE, DefaultProperties.STATEMENT_CONCEPT_NAME, owlOntology_, statementOntology, false, OntologyType.SOURCE);
  		int numStatementAxiomsMoved = moveStatementAxioms(DefaultProperties.STATEMENT_CONCEPT_NAMESPACE, DefaultProperties.STATEMENT_CONCEPT_NAME, owlOntology_, statementOntology);
- 		if (numStatementAxiomsMoved == 0) 	
- 			System.out.println("WARNING:  No Statement Concepts found in ontology (looking for IRI = " + DefaultProperties.STATEMENT_CONCEPT_NAMESPACE + "#" + DefaultProperties.STATEMENT_CONCEPT_NAME);
+ 		if (numStatementAxiomsMoved == 0) {	
+// 			System.out.println("WARNING:  No Statement Concepts found in ontology (looking for IRI = " + DefaultProperties.STATEMENT_CONCEPT_NAMESPACE + "#" + DefaultProperties.STATEMENT_CONCEPT_NAME);
+ 			System.out.println("WARNING:  No Statement Concepts found in ontology (looking for IRI = " + DefaultProperties.STATEMENT_CONCEPT_NAMESPACE + DefaultProperties.STATEMENT_CONCEPT_NAME);
+ //ReasonerExplorer.pause("after 'No Statement Concepts were found' ");
+ 		}
  		else {
+ //ReasonerExplorer.pause("after moveStatementAxioms - " + numStatementAxiomsMoved + " were moved");
+
 //DEBUG System.out.println("REASONER: Completed moving of axioms from loaded to statement ontology");	
  		
  			// The kernel ontology is loaded into and classified by a standard ElkReasoner.  This classification
@@ -269,6 +279,7 @@ public class ElkReasonerSHIELD extends ElkReasoner {
  			// concepts into the kernel reasoner's taxonomy.
  			StructuralReasonerFactory structuralReasonerFactory = new StructuralReasonerFactory(); 
  			OWLReasoner statementOwlReasoner = structuralReasonerFactory.createNonBufferingReasoner(statementOntology);
+ //ReasonerExplorer.pause("after creating and classifying statement ontology ");
 		
 //DEBUG System.out.println("ORIGINAL STATEMENT REASONER TAXONOMY - IN reCreateReasoner");
 //DEBUG ReasonerExplorer.printCurrentReasonerTaxonomy((StructuralReasoner) statementOwlReasoner, false);
@@ -278,8 +289,11 @@ public class ElkReasonerSHIELD extends ElkReasoner {
  			// needed by the subsequent classifyStatementConcepts operation.
  			this.classifier = new StatementClassifierSHIELD(this.owlOntology_, statementOntology, this, statementOwlReasoner,
                                                         	DefaultProperties.STATEMENT_CONCEPT_NAMESPACE, DefaultProperties.STATEMENT_CONCEPT_NAME,
-                                                        	DefaultProperties.TEMPORAL_ANNOTATION_OWL_IRI, DefaultProperties.ABSENCE_NAMESPACE, 
-                                                        	DefaultProperties.ABSENCE_PROPERTY, DefaultProperties.ABSENCE_VALUE);
+                                                        	DefaultProperties.TEMPORAL_ANNOTATION_OWL_IRI, DefaultProperties.ABSENCE_PROPERTY_NAMESPACE, 
+                                                        	DefaultProperties.ABSENCE_PROPERTY_NAME, DefaultProperties.ABSENCE_VALUE_NAMESPACE,
+                                                        	DefaultProperties.ABSENCE_VALUE_NAME);
+ //ReasonerExplorer.pause("after creating StatementClassifier Shield; about to start classification");
+
  			classifier.classifyStatementConcepts(this.owlOntology_, statementOntology, this, statementOwlReasoner);
 		
 //DEBUG System.out.println("POST-MIGRATION KERNEL REASONER TAXONOMY - IN reCreateReasoner");
@@ -306,7 +320,8 @@ public class ElkReasonerSHIELD extends ElkReasoner {
 	private synchronized static Set<OWLClass> buildSubClassSet(String conceptNamespace, String conceptName, OWLOntology ontology, OWLReasoner reasoner, boolean includeRootClass)  {
 		OWLDataFactory factory = ontology.getOWLOntologyManager().getOWLDataFactory();
 	    OWLClass superClass = factory.getOWLClass(
-	       IRI.create(conceptNamespace + "#" + conceptName));
+//	       IRI.create(conceptNamespace + "#" + conceptName));
+	 	   IRI.create(conceptNamespace + conceptName));
 	    Set<OWLClass> subClassSet = reasoner.getSubClasses(superClass, false).getFlattened();
 	    if (includeRootClass)  {
 	        subClassSet.add(superClass);  // include the superclass concept also
@@ -345,6 +360,7 @@ public class ElkReasonerSHIELD extends ElkReasoner {
 //	    SOURCE,
 //	    DESTINATION
 //	  }
+	
 	
 	
 

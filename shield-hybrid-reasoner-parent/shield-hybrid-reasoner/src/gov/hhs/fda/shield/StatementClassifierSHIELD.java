@@ -34,12 +34,14 @@ public class StatementClassifierSHIELD {
 	private String statementConceptNamespace;
 	private String statementConceptName;
 	private String temporalAnnotationOwlIRI;
-	private String absenceNamespace;
-	private String absenceProperty;
-	private String absenceValue;
+	private String absencePropertyNamespace;
+	private String absencePropertyName;
+	private String absenceValueNamespace;
+	private String absenceValueName;
 	private SubsumptionNormalFormBuilderSHIELD subsumptionNormalFormBuilder;
 	private CustomSubsumptionTesterSHIELD subsumptionTester;
 
+	private int countClassified = 0;
 
 
 	public StatementClassifierSHIELD(OWLOntology kernelOntology, OWLOntology statementOntology, OWLReasoner kernelOwlReasoner, OWLReasoner statementOwlReasoner) {
@@ -49,16 +51,18 @@ public class StatementClassifierSHIELD {
 		this.statementConceptNamespace = DefaultProperties.STATEMENT_CONCEPT_NAMESPACE;
 		this.statementConceptName = DefaultProperties.STATEMENT_CONCEPT_NAME;
 		this.temporalAnnotationOwlIRI = DefaultProperties.TEMPORAL_ANNOTATION_OWL_IRI;
-		this.absenceNamespace = DefaultProperties.ABSENCE_NAMESPACE;
-		this.absenceProperty = DefaultProperties.ABSENCE_PROPERTY;
-		this.absenceValue = DefaultProperties.ABSENCE_VALUE;
+		this.absencePropertyNamespace = DefaultProperties.ABSENCE_PROPERTY_NAMESPACE;
+		this.absencePropertyName = DefaultProperties.ABSENCE_PROPERTY_NAME;
+		this.absenceValueNamespace = DefaultProperties.ABSENCE_VALUE_NAMESPACE;
+		this.absenceValueName = DefaultProperties.ABSENCE_VALUE_NAME;
 		subsumptionNormalFormBuilder = new SubsumptionNormalFormBuilderSHIELD(kernelOntology,
 				 																 statementOntology,
 				 																 kernelOwlReasoner,
 				 																 statementOwlReasoner,
-				 																 this.absenceNamespace,
-				 																 this.absenceProperty,
-				 																 this.absenceValue);	
+				 																 this.absencePropertyNamespace,
+				 																 this.absencePropertyName,
+				 																 this.absenceValueNamespace,	
+				 																 this.absenceValueName);	
 		subsumptionNormalFormBuilder.init();
 		subsumptionNormalFormBuilder.generate();
 		subsumptionTester = new CustomSubsumptionTesterSHIELD(kernelOntology, this.temporalAnnotationOwlIRI);
@@ -66,27 +70,28 @@ public class StatementClassifierSHIELD {
 		
 	public StatementClassifierSHIELD(OWLOntology kernelOntology, OWLOntology statementOntology, OWLReasoner kernelOwlReasoner, 
 									OWLReasoner statementOwlReasoner, String statementConceptNamespace, String statementConceptName, String temporalAnnotationOwlIRI,
-									String absenceNamespace, String absenceProperty, String absenceValue) {
+									String absenceNamespace, String absenceProperty, String absenceValueNamespace, String absenceValueName) {
 		this.statementOntology_ = statementOntology;
 		this.kernelOwlReasoner_ = kernelOwlReasoner;
 		this.statementOwlReasoner_ = statementOwlReasoner;
 		this.statementConceptNamespace = statementConceptNamespace;
 		this.statementConceptName = statementConceptName;
 		this.temporalAnnotationOwlIRI = temporalAnnotationOwlIRI;
-//		this.owlThingIRI = owlThingIRI;
-//		this.owlNothingIRI = owlNothingIRI;
-		this.absenceNamespace = absenceNamespace;
-		this.absenceProperty = absenceProperty;
-		this.absenceValue = absenceValue;
+		this.absencePropertyNamespace = absenceNamespace;
+		this.absencePropertyName = absenceProperty;
+		this.absenceValueNamespace = absenceValueNamespace;
+		this.absenceValueName = absenceValueName;
 		subsumptionNormalFormBuilder = new SubsumptionNormalFormBuilderSHIELD(kernelOntology,
 				 																 statementOntology,
 				 																 kernelOwlReasoner,
 				 																 statementOwlReasoner,
 				 																 absenceNamespace,
 				 																 absenceProperty,
-				 																 absenceValue);	
+				 																 absenceValueNamespace,	
+				 																 absenceValueName);	
 		subsumptionNormalFormBuilder.init();
 		subsumptionNormalFormBuilder.generate();
+//DEBUG ReasonerExplorer.pause("about to create new CustomSubsumptionTesterSHIELD");
 		subsumptionTester = new CustomSubsumptionTesterSHIELD(kernelOntology, temporalAnnotationOwlIRI);
 	}
 
@@ -101,27 +106,36 @@ public class StatementClassifierSHIELD {
 			ConcurrentClassTaxonomy destinationTaxonomy = (ConcurrentClassTaxonomy) kernelElkReasoner.getInternalReasoner().getTaxonomy();
 //DEBUG System.out.println("ORIGINAL KERNEL REASONER TAXONOMY - IN CLASSIFIER - BEFORE REMOVAL OF STATEMENT-CONCEPT");
 //DEBUG ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) kernelElkReasoner, false);
-			String statementConceptIri = this.statementConceptNamespace + "#" + this.statementConceptName;
-			boolean removed = removeStatementHierachyFromKernelTaxonomy(statementConceptIri, statementOntology, statementOwlReasoner, destinationTaxonomy); 
-			if (!removed) {
+			String statementConceptIri = this.statementConceptNamespace + this.statementConceptName;
+			// remove root of statement hierarchy from kernelTaxonomy, and save the former parent node(s) of this root, so they can later
+			// be reconnected as the parent node(s) of the new (correctly) classified sub-tree of statement concepts
+			List<TaxonomyNode<ElkClass>> rootsSuperNodeList = removeStatementHierachyFromKernelTaxonomy(statementConceptIri, statementOntology, statementOwlReasoner, destinationTaxonomy); 		
+			if (rootsSuperNodeList == null) {
 				throw new RuntimeException("Cannot remove Statement hierarchy from Kernel reasoner taxonomy; hierarchy could not be found.");
 			}
 //DEBUG System.out.println("ORIGINAL KERNEL REASONER TAXONOMY - IN CLASSIFIER - AFTER REMOVAL OF STATEMENT-CONCEPT");
 //DEBUG ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) kernelElkReasoner, false);
-
-			TaxonomyNode<ElkClass> rootKernelTaxonomyNodeForClassification = copyNamedNodeFromStatementToKernelReasoner(statementConceptIri, statementOntology, statementOwlReasoner, kernelElkReasoner);
+			// Create a root node for the new (correctly classified) statement hierarchy in the kernel reasoner and put it in the right
+			// place in the kernel hierarchy.  The classification of all the other statement concepts will take place below this
+			// root node
+			TaxonomyNode<ElkClass> rootKernelTaxonomyNodeForClassification = 
+							copyNamedNodeFromStatementToKernelReasoner(statementConceptIri, statementOntology, 
+																	   statementOwlReasoner, kernelElkReasoner, rootsSuperNodeList);
 //DEBUG System.out.println("ORIGINAL KERNEL REASONER TAXONOMY - IN CLASSIFIER");
 //DEBUG ReasonerExplorer.printCurrentReasonerTaxonomy((ElkReasoner) kernelElkReasoner, false);
+			// Collect all of the statement concepts from the statement hierarchy in preparation for correctly classifying them in the
+			// kernel hierarchy
 			NodeSet<OWLClass> subNodes = getSubsumedNodesFromOwlReasoner(statementConceptIri, statementOwlReasoner, statementOntology);
 
 // DEBUG for (Node<OWLClass> node : subNodes) {
 // DEBUG	System.out.println("****TRYING TO CLASSIFY: "+ node.getEntities().iterator().next().getIRI().toString());
 // DEBUG}
-			
+			// Iterate through each statement concept from the statement hierarchy and correctly classify it in the kernel hierarchy,
+			// below the rootKernelTaxonomyNodeForClassification
 			for (Iterator<Node<OWLClass>> iterator = subNodes.iterator(); iterator.hasNext();) {
 				Node<OWLClass> candidateNode = (Node<OWLClass>) iterator.next();
-				if (!candidateNode.isBottomNode() && 
-					logicallyDefinedInOntology(candidateNode.getEntities().iterator().next(), statementOntology)) {
+				if (!candidateNode.isBottomNode() &&  // don't classify the bottom nodes from the statement hierarchy
+					logicallyDefinedInOntology(candidateNode.getEntities().iterator().next(), statementOntology)) { // don't classify the declaration nodes from the statement hierarchy, only the defined concept nodes
 						Node<OWLClass> rootKernelTaxonomyNodeForClassificationAsOwlNode = 
 								ElkConverter.getInstance().convertClassNode(rootKernelTaxonomyNodeForClassification);
 						if (rootKernelTaxonomyNodeForClassificationAsOwlNode.equals(kernelElkReasoner.getTopClassNode())) {
@@ -130,8 +144,16 @@ public class StatementClassifierSHIELD {
 						TaxonomyNode<ElkClass> newCandidateElkClassNode = createElkTaxonomyReasonerNode(candidateNode, destinationTaxonomy);
 						OWLClass candidateClass = candidateNode.getEntities().iterator().next();
 						SubsumptionNormalFormSHIELD candidateSNF = subsumptionNormalFormBuilder.getSNF(candidateClass);
-// DEBUG System.out.println("****TRYING TO CLASSIFY: "+ newCandidateElkClassNode.getMembers().iterator().next().getIri().toString());
+//DEBUG System.out.println();
+//DEBUG System.out.println("****TRYING TO CLASSIFY: "+ newCandidateElkClassNode.getMembers().iterator().next().getIri().toString());
 						classifyStatementConcept(newCandidateElkClassNode, candidateSNF, rootKernelTaxonomyNodeForClassification, destinationTaxonomy);
+/* DEBUG
+						if (++countClassified % 10 == 0) {
+	System.out.println("************");
+	System.out.println("Classified " + countClassified);
+	System.out.println("************");
+}
+*/
 						}
 			}
 		} catch (ElkInconsistentOntologyException e) {
@@ -142,49 +164,67 @@ public class StatementClassifierSHIELD {
 			e.printStackTrace();
 		}
 	}
+
 	
 	//  Note:  This method assumes that the root of the statement hierarchy is a direct child of the kernelElkReasoner taxonomy top node
 	//  TODO:  Generalize this method not to make the assumption above, but to use a breadth-first search for the root in the entire kernelElkReasoner taxonomy
-	private boolean removeStatementHierachyFromKernelTaxonomy(String targetIri, OWLOntology statementOntology,
-			OWLReasoner statementOwlReasoner, ConcurrentClassTaxonomy kernelElkReasonerTaxonomy) {
-		Node<OWLClass> targetNode = getNamedOwlClassNodeFromStatementReasoner(targetIri, statementOntology,
-				statementOwlReasoner);
-		if (targetNode == null) {
+// 	private boolean removeStatementHierachyFromKernelTaxonomy(String targetIri, OWLOntology statementOntology,
+ 	private List<TaxonomyNode<ElkClass>> removeStatementHierachyFromKernelTaxonomy(String targetIri, OWLOntology statementOntology,
+ 															  OWLReasoner statementOwlReasoner, ConcurrentClassTaxonomy kernelElkReasonerTaxonomy) {
+		Node<OWLClass> targetOwlNode = getNamedOwlClassNodeFromStatementReasoner(targetIri, statementOntology, statementOwlReasoner);
+		if (targetOwlNode == null) {
 			throw new RuntimeException(
-					"Root node of sub-tree to be removed from kernelReasoner not found in kernelReasoner hierarchy: " + targetIri);
+					"Root node of sub-tree to be removed from kernelReasoner not found in statementOwlReasoner: " + targetIri);
 		} else {
-			TaxonomyNode<ElkClass> taxonomyTopNode = kernelElkReasonerTaxonomy.getTopNode();
-			for (TaxonomyNode<ElkClass> childOfTaxonomyTopNode : taxonomyTopNode.getDirectSubNodes()) { // iterate
-																										// through
-																										// children
-				for (ElkClass currentElkClass : childOfTaxonomyTopNode.getMembers()) { // iterate through each member of
-																						// the child (an ElkClass)
-					if (ElkConverter.getInstance().convert(currentElkClass)
-							.equals(targetNode.getEntities().iterator().next())) {
-						removeTaxonomySubTree(childOfTaxonomyTopNode, taxonomyTopNode, kernelElkReasonerTaxonomy);
-						return true;
-					}
-				}
+			TaxonomyNode<ElkClass> taxonomyTopElkNode = kernelElkReasonerTaxonomy.getTopNode();
+			TaxonomyNode<ElkClass> statementRootElkNode = breadthFirstSearchForStatementRootInKernelTaxonomy(taxonomyTopElkNode, targetOwlNode);
+			if (statementRootElkNode == null) {
+				throw new RuntimeException(
+						"Root node of sub-tree to be removed from kernelReasoner not found in kernelReasoner: " + targetIri);
+			} else {
+			List<TaxonomyNode<ElkClass>> rootsSuperNodeList = new ArrayList<>(statementRootElkNode.getDirectSuperNodes()); // convert to List so it
+				removeTaxonomySubTree(statementRootElkNode, kernelElkReasonerTaxonomy);
+				return rootsSuperNodeList;
 			}
 		}
-		return false; // if the targetName node is not found as a child of the taxonomyTopNode
 	}
 
-	private void removeTaxonomySubTree(TaxonomyNode<ElkClass> taxonomyNode, TaxonomyNode<ElkClass> parentTaxonomyNode,
-			ConcurrentClassTaxonomy kernelElkReasonerTaxonomy) {
+	
+	private TaxonomyNode<ElkClass> breadthFirstSearchForStatementRootInKernelTaxonomy(TaxonomyNode<ElkClass> taxonomyTopElkNode,
+			Node<OWLClass> targetOwlNode) {
+		List<TaxonomyNode<ElkClass>> nodeList = new ArrayList<TaxonomyNode<ElkClass>>();
+		nodeList.add(taxonomyTopElkNode);
+		int index = 0;
+		while (index < nodeList.size()) {
+			TaxonomyNode<ElkClass> currentTaxonomyElkNode = nodeList.get(index);
+			for (ElkClass currentElkClass : currentTaxonomyElkNode.getMembers()) { // iterate through each member ElkClass of the node
+				if (ElkConverter.getInstance().convert(currentElkClass)
+						.equals(targetOwlNode.getEntities().iterator().next())) {
+					return currentTaxonomyElkNode;
+				}
+			}  // if currentTaxonomyElkNode != targetOwlNode, then add children ofcurrentTaxonomyElkNode to end of nodeList and continue 
+			   // iterating through nodeList (breadth-first search)
+			nodeList.addAll(currentTaxonomyElkNode.getDirectSubNodes());
+			index++;
+		} // if targetOwlNode not found anywhere in the kernelReasoner taxonomy, return null (although this search will take a long time with a large ontology...)
+		return null;
+	}
+
+	private void removeTaxonomySubTree(TaxonomyNode<ElkClass> taxonomyNode, ConcurrentClassTaxonomy kernelElkReasonerTaxonomy) {
 		List<TaxonomyNode<ElkClass>> list = new ArrayList<>(taxonomyNode.getDirectSubNodes()); // convert to List so it
-																								// will be mutable
+																							   // will be mutable
 		for (TaxonomyNode<ElkClass> childOfTaxonomyNode : list) { // iterate through children
 			if (childOfTaxonomyNode instanceof NonBottomClassNode)  // prevents attempts to remove BottomClassNodes, which throw error if updated, and will have no child nodes
-				removeTaxonomySubTree(childOfTaxonomyNode, taxonomyNode, kernelElkReasonerTaxonomy); // perform
-																										// depth-first
-																										// removal of
-																										// all nodes in
-																										// sub-tree
+				removeTaxonomySubTree(childOfTaxonomyNode, kernelElkReasonerTaxonomy); 	// perform
+																						// depth-first
+																						// removal of
+																						// all nodes in
+																						// sub-tree, i.e., remove descendants before disconnecting/removing this taxonomyNode
 		}
-		disconnectNodes((NonBottomClassNode) taxonomyNode, (NonBottomClassNode) parentTaxonomyNode);
+		disconnectNode((NonBottomClassNode) taxonomyNode);
 		kernelElkReasonerTaxonomy.removeNode((UpdateableTaxonomyNode<ElkClass>) taxonomyNode);
 	}
+
 
 
 	public boolean classifyStatementConcept(TaxonomyNode<ElkClass> candidateNode, SubsumptionNormalFormSHIELD candidateSNF, TaxonomyNode<ElkClass> predicateNode, ConcurrentClassTaxonomy destinationTaxonomy) {
@@ -210,8 +250,10 @@ public class StatementClassifierSHIELD {
 // DEBUG     		System.out.println("Candidate:  " + candidateNode.getMembers().iterator().next().getIri().toString());
 // DEBUG     		System.out.println("Predicate:  " + predicateNode.getMembers().iterator().next().getIri().toString());
 // DEBUG }
+// DEBUG System.out.println("Testing subsumption (MostSpecificSubsumers)=> Candidate: " + candidateNode.getMembers().iterator().next().getIri() + "  Predicate: " + predicateNode.getMembers().iterator().next().getIri());
 		 if (subsumptionTester.isSubsumedBy(candidateSNF, predicateSNF, kernelOwlReasoner_, statementOwlReasoner_) &&
 			 !candidateNode.equals(predicateNode)) { // We know the candidate 
+// DEBUG System.out.println("       Answer:  YES");
 			 for (TaxonomyNode<ElkClass> predicateChildNode : predicateNode.getDirectSubNodes()) {
 				 // Recurses here
 				 if ( classifyStatementConcept(candidateNode, candidateSNF, predicateChildNode, destinationTaxonomy) ) {
@@ -222,13 +264,20 @@ public class StatementClassifierSHIELD {
 				 if (!nodeAlreadyConnectedTo(candidateNode, predicateNode)) { // Could occur if the candidateNode can arrive at the predicateNode via multiple paths (i.e., if multiple inheritance exists)
 				     // connect candidate to predicate, then go on to find most general subsumees of the candidate node
 					connectNodes((NonBottomClassNode) candidateNode, (NonBottomClassNode) predicateNode);
-// DEBUG	System.out.println("Classifying " + candidateNode.getMembers().iterator().next().getIri() + " below " + predicateNode.getMembers().iterator().next().getIri());
+// DEBUG System.out.println(" ==> Classifying " + candidateNode.getMembers().iterator().next().getIri() + " below " + predicateNode.getMembers().iterator().next().getIri());
 					findAndConnectMostGeneralSubsumees(candidateNode, candidateSNF, predicateNode, destinationTaxonomy);  // We know that, if any exist, they must be descendants of the predicate node
+				 }
+				 else {
+// DEBUG System.out.println(" ==> Not Connecting " + candidateNode.getMembers().iterator().next().getIri() + " already connected to " + predicateNode.getMembers().iterator().next().getIri());
+
 				 }
 			 }
 			 return true;
 		 }
-		 else return false;
+		 else {
+// DEBUG System.out.println("       Answer:  NO");			 
+			 return false;
+		 }
 	}
 
 	private void findAndConnectMostGeneralSubsumees(TaxonomyNode<ElkClass> predicateNode, SubsumptionNormalFormSHIELD predicateSNF, TaxonomyNode<ElkClass> parentCandidateNode, ConcurrentClassTaxonomy destinationTaxonomy) {
@@ -240,20 +289,32 @@ public class StatementClassifierSHIELD {
 				}
 			 else {
 				 OWLClass candidateClass = ElkConverter.getInstance().convert(candidateNode.getMembers().iterator().next());  
-				 SubsumptionNormalFormSHIELD candidateSNF = subsumptionNormalFormBuilder.getSNF(candidateClass);  // Check if the current child of parentCandidateNode is subsumed by the predicateNode
-				 if (subsumptionTester.isSubsumedBy(candidateSNF, predicateSNF, kernelOwlReasoner_, statementOwlReasoner_) &&
+				 SubsumptionNormalFormSHIELD candidateSNF = subsumptionNormalFormBuilder.getSNF(candidateClass);
+// DEBUG System.out.println("Testing subsumption (MostGeneralSubsumees) => Candidate: " + candidateNode.getMembers().iterator().next().getIri() + "  Predicate: " + predicateNode.getMembers().iterator().next().getIri());
+				 if (subsumptionTester.isSubsumedBy(candidateSNF, predicateSNF, kernelOwlReasoner_, statementOwlReasoner_) &&  // Check if the current child of parentCandidateNode is subsumed by the predicateNode
 				     ! candidateNode.equals(predicateNode) ) {  // Only want properly subsumed concepts, not self-subsumed
+// DEBUG System.out.println("       Answer:  YES");
 					 if (!nodeAlreadySubsumedBy(candidateNode, predicateNode)) {  // Another path may already exist from predicateNode to candidateNode if multiple inheritance
 						 connectNodes((NonBottomClassNode) candidateNode, (NonBottomClassNode) predicateNode);  // Want to connect the *top-most* subsumee, so don't recurse below here
-// DEBUG System.out.println("Classifying " + predicateNode.getMembers().iterator().next().getIri() + " above " + candidateNode.getMembers().iterator().next().getIri());
-
+// DEBUG System.out.println(" ==> Classifying " + predicateNode.getMembers().iterator().next().getIri() + " above " + candidateNode.getMembers().iterator().next().getIri());
+					 }
 					 	if (predicateNodeAlsoHasParentCandidateNodeAsASuperClass(predicateNode, parentCandidateNode)) {  // i.e., if candidateNode and predicateNode are currently siblings
 						disconnectNodes((NonBottomClassNode) candidateNode, (NonBottomClassNode) parentCandidateNode);  // the existing link provides no additional information and is redundant
-// DEBUG System.out.println("Disconnecting link between " + candidateNode.getMembers().iterator().next().getIri() + " and its parent " + parentCandidateNode.getMembers().iterator().next().getIri());
-					 	}
-					 }
+// DEBUG System.out.println(" ==> Disconnecting link [ONE] between " + candidateNode.getMembers().iterator().next().getIri() + " and its parent " + parentCandidateNode.getMembers().iterator().next().getIri());
+					 	}			 	
+						Set<? extends TaxonomyNode<ElkClass>> candidateChildSet = candidateNode.getDirectSubNodes();
+						List<TaxonomyNode<ElkClass>> candidateChildList = new ArrayList<>(candidateChildSet);  // Converted to List so it will be mutable
+						for (TaxonomyNode<ElkClass> candidateChildNode : candidateChildList) {  // for each child of the parentCandidateNode, check if it is subsumed by the predicateNode
+							if (predicateNodeAlsoHasCandidatesChildNodeAsASubClass(predicateNode, candidateChildNode)) {  // i.e., if candidateNode and predicateNode are currently siblings
+								disconnectNodes((NonBottomClassNode) candidateChildNode, (NonBottomClassNode) predicateNode);  // the existing link provides no additional information and is redundant
+// DEBUG System.out.println(" ==> Disconnecting link [TWO] between " + candidateChildNode.getMembers().iterator().next().getIri() + " and its parent " + predicateNode.getMembers().iterator().next().getIri());
+							}
+						}
 				 }
-				 else findAndConnectMostGeneralSubsumees(predicateNode, predicateSNF, candidateNode, destinationTaxonomy);  // if the current child of parentCandidateNode is not subsumed by the predicateNode, recurse to the current child's children and continue looking
+				 else {
+// DEBUG System.out.println("       Answer:  NO");			 
+					 findAndConnectMostGeneralSubsumees(predicateNode, predicateSNF, candidateNode, destinationTaxonomy);  // if the current child of parentCandidateNode is not subsumed by the predicateNode, recurse to the current child's children and continue looking
+				 }
 			 }
 		 }
 	}
@@ -266,6 +327,16 @@ public class StatementClassifierSHIELD {
 		TaxonomyNode<ElkClass> newDestinationNode = destinationElkTaxonomy.getCreateNonBottomClassNode(membersToMove);
 		return newDestinationNode;
 	}
+	
+	private void connectNode(TaxonomyNode<ElkClass> node, List<TaxonomyNode<ElkClass>> superNodeList) {
+			for (TaxonomyNode<ElkClass> superNode : superNodeList) { // iterate through parent nodes
+				((NonBottomClassNode) superNode)
+				        .addDirectSubNode((UpdateableTaxonomyNode<ElkClass>) node);
+				((NonBottomClassNode) node)
+				        .addDirectSuperNode((UpdateableTaxonomyNode<ElkClass>) superNode);
+			}
+	}
+	
 
 	private void connectNodes(NonBottomClassNode subNode, NonBottomClassNode superNode) {
 		superNode.addDirectSubNode(subNode);
@@ -273,6 +344,14 @@ public class StatementClassifierSHIELD {
 
 	}
 	
+	private void disconnectNode(NonBottomClassNode node) {
+		List<TaxonomyNode<ElkClass>> superNodeList = new ArrayList<>(node.getDirectSuperNodes());  // will be mutable
+			for (TaxonomyNode<ElkClass> superNode : superNodeList) { // iterate through parent nodes
+				((NonBottomClassNode) superNode).removeDirectSubNode(node);
+				node.removeDirectSuperNode((NonBottomClassNode) superNode);
+			}
+	}
+
 	private void disconnectNodes(NonBottomClassNode subNode, NonBottomClassNode superNode) {
 		superNode.removeDirectSubNode(subNode);
 		subNode.removeDirectSuperNode(superNode);				
@@ -281,6 +360,13 @@ public class StatementClassifierSHIELD {
 
 	private boolean predicateNodeAlsoHasParentCandidateNodeAsASuperClass(TaxonomyNode<ElkClass> predicateNode, TaxonomyNode<ElkClass> parentCandidateNode) {
 		if (predicateNode.getDirectSuperNodes().contains(parentCandidateNode)) {
+			return true;
+		}
+		else return false;
+	}
+	
+	private boolean predicateNodeAlsoHasCandidatesChildNodeAsASubClass(TaxonomyNode<ElkClass> predicateNode, TaxonomyNode<ElkClass> candidateChildNode) {
+		if (predicateNode.getDirectSubNodes().contains(candidateChildNode)) {
 			return true;
 		}
 		else return false;
@@ -311,42 +397,48 @@ public class StatementClassifierSHIELD {
 		return taxonomyNodesToReturn;
 	}
 
-	private TaxonomyNode<ElkClass> copyNamedNodeFromStatementToKernelReasoner(String targetNodeIri,
-					OWLOntology statementOntology, OWLReasoner statementOwlReasoner, ElkReasoner kernelElkReasoner) {
-		TaxonomyNode<ElkClass> newDestinationElkClassNode = null;
-		try {
-			// First, retrieve the OWLClass node that represents the root concept of the statement hierarchy
-			// from the statementOwlReasoner ("Statement-Concept", in the default version of the statement sub-ontology)
-			Node<OWLClass> targetNode = getNamedOwlClassNodeFromStatementReasoner(targetNodeIri,
-				statementOntology, statementOwlReasoner);
-			if (targetNode == null) {
-				throw new RuntimeException("Named node to move to kernelReasoner not found in the StatementReasoner: "
-						+ targetNodeIri);
-			}
-			if (targetNode.isBottomNode()) {
-				throw new RuntimeException(
-						"Named node to move to under the top of the kernelReasoner is the bottom node.  That operation not allowed.");
-			}
-			// Now, create a new TaxonomyNode under the top node of the destinationTaxonomy, and put the target OWLClass node
-			// within it.  This will be the root of the Statement sub-hierarchy in the destinationTaxonomy.
-			ConcurrentClassTaxonomy destinationTaxonomy = (ConcurrentClassTaxonomy) kernelElkReasoner
-					.getInternalReasoner().getTaxonomy();
-			TaxonomyNode<ElkClass> destinationTaxonomyTopNode = destinationTaxonomy.getTopNode();
-// DEBUG System.out.println("Node Class to Migrate: " + targetNode.getEntities().iterator().next().getIRI());
-			newDestinationElkClassNode = createElkTaxonomyReasonerNode(targetNode, destinationTaxonomy);
-			((NonBottomClassNode) destinationTaxonomyTopNode)
-					.addDirectSubNode((UpdateableTaxonomyNode<ElkClass>) newDestinationElkClassNode);
-				((NonBottomClassNode) newDestinationElkClassNode)
-						.addDirectSuperNode((UpdateableTaxonomyNode<ElkClass>) destinationTaxonomyTopNode);
-		} catch (ElkInconsistentOntologyException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ElkException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+
+private TaxonomyNode<ElkClass> copyNamedNodeFromStatementToKernelReasoner(String targetNodeIri, OWLOntology statementOntology, 
+																		  OWLReasoner statementOwlReasoner, ElkReasoner kernelElkReasoner,
+																		  List<TaxonomyNode<ElkClass>> rootsSuperNodeList) {
+	TaxonomyNode<ElkClass> newDestinationElkClassNode = null;
+	try {
+		// First, retrieve the OWLClass node that represents the root concept of the
+		// statement hierarchy
+		// from the statementOwlReasoner ("Statement-Concept", in the default version of
+		// the statement sub-ontology)
+		Node<OWLClass> targetNode = getNamedOwlClassNodeFromStatementReasoner(targetNodeIri, statementOntology,
+																			  statementOwlReasoner);
+		if (targetNode == null) {
+			throw new RuntimeException(
+					"Named node to move to kernelReasoner not found in the StatementReasoner: " + targetNodeIri);
 		}
-		return newDestinationElkClassNode;
+		if (targetNode.isBottomNode()) {
+			throw new RuntimeException(
+					"Named node to move to under the top of the kernelReasoner is the bottom node.  That operation not allowed.");
+		}
+		// Now, create a new TaxonomyNode under the kernel hierarchy node(s) in the rootsSuperNodeList,
+		// and put the target OWLClass node within it. This will be the root of the Statement sub-hierarchy in the
+		// destinationTaxonomy.
+		ConcurrentClassTaxonomy destinationTaxonomy = (ConcurrentClassTaxonomy) kernelElkReasoner.getInternalReasoner()
+				.getTaxonomy();
+		TaxonomyNode<ElkClass> destinationTaxonomyTopNode = destinationTaxonomy.getTopNode();
+//DEBUG System.out.println("Node Class to Migrate: " + targetNode.getEntities().iterator().next().getIRI());
+		newDestinationElkClassNode = createElkTaxonomyReasonerNode(targetNode, destinationTaxonomy);
+		connectNode(newDestinationElkClassNode, rootsSuperNodeList); // put the new root of the statement hierarchy (which is about to be 
+																	 // correctly classified) below the parent nodes of the old root of
+																	 // the (incorrectly classified) statement hierarchy, which was
+																	 // removed before this method was called.
+	} catch (ElkInconsistentOntologyException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	} catch (ElkException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
 	}
+	return newDestinationElkClassNode;
+}
+
 	
 	private Node<OWLClass> getNamedOwlClassNodeFromStatementReasoner(String targetNodeIri,
 			OWLOntology statementOntology, OWLReasoner statementOwlReasoner) {
@@ -358,15 +450,14 @@ public class StatementClassifierSHIELD {
 			OWLClass topStatementReasonerClassNode = statementOwlReasoner.getTopClassNode().getEntities().iterator()
 					.next();
 			NodeSet<OWLClass> subNodes = statementOwlReasoner.getSubClasses(topStatementReasonerClassNode, false);
-			Node<OWLClass> targetNode = null; // will be assigned below if a node containing the targetNodeName class is
-										      // among the nodes in the statementOwlReasoner taxonomy
 			for (Iterator<Node<OWLClass>> iterator = subNodes.iterator(); iterator.hasNext();) {
 				Node<OWLClass> subNode = (Node<OWLClass>) iterator.next();
 				if (subNode.getEntities().iterator().next().equals(targetNamedClass)) {
-					targetNode = subNode;
+					return subNode;
+
 				}
 			}
-			return targetNode;
+			return null;
 	}
 
 	@SuppressWarnings("deprecation")
